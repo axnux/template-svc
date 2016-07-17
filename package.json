@@ -1,0 +1,36 @@
+{
+  "name": "template-svc",
+  "version": "0.1.0",
+  "description": "microservices template",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "gulp test:once",
+    "bdd": "gulp bdd"
+  },
+  "keywords": [
+    "template",
+    "microservices"
+  ],
+  "dependencies": {
+    "body-parser": "~1.15.2",
+    "express": "~4.14.0",
+    "glob": "~7.0.5",
+    "gulp": "~3.9.1",
+    "lodash": "~4.13.1",
+    "method-override": "~2.3.6"
+  },
+  "devDependencies": {
+    "chai": "~3.5.0",
+    "eslint": "~3.0.1",
+    "gulp-eslint": "~3.0.1",
+    "gulp-load-plugins": "~1.2.4",
+    "gulp-mocha": "~2.2.0",
+    "mocha": "~2.5.3",
+    "run-sequence": "~1.2.2",
+    "sinon": "~1.17.4",
+    "sinon-chai": "~2.8.0"
+  },
+  "author": "axnux",
+  "license": "MIT"
+}
