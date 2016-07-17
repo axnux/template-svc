@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 module.exports = {
   server: {
@@ -6,4 +6,4 @@ module.exports = {
     routes: ['src/*/routes/**/*.js'],
     allJS: ['server.js', 'config/**/*.js', 'src/**/*.js']
   }
-};
+}

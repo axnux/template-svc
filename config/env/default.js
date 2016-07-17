@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 module.exports = {
   port: process.env.PORT || 3000,
@@ -6,10 +6,10 @@ module.exports = {
   uploads: {
     dest: process.env.UPLOAD_DIR || './tmp/upload',
     image: {
-      dest: 'img/',
+      dest: 'img/'
     },
     video: {
-      dest: 'vid/',
+      dest: 'vid/'
     }
   }
-};
+}
