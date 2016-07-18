@@ -20,7 +20,17 @@ gulp.task('env:test', function () {
 
 // Make sure upload directory exists
 gulp.task('makeUploadsDir', function () {
-  return mkdirp(mergedConfig.uploads.dest, function (err) {
+  mkdirp(mergedConfig.uploads.dest, function (err) {
+    if (err && err.code !== 'EEXIST') {
+      console.error(err)
+    }
+  })
+  mkdirp(mergedConfig.uploads.dest + mergedConfig.uploads.image.dest, function (err) {
+    if (err && err.code !== 'EEXIST') {
+      console.error(err)
+    }
+  })
+  mkdirp(mergedConfig.uploads.dest + mergedConfig.uploads.video.dest, function (err) {
     if (err && err.code !== 'EEXIST') {
       console.error(err)
     }

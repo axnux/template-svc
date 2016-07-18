@@ -29,7 +29,8 @@
     "mocha": "~2.5.3",
     "run-sequence": "~1.2.2",
     "sinon": "~1.17.4",
-    "sinon-chai": "~2.8.0"
+    "sinon-chai": "~2.8.0",
+    "supertest": "~1.2.0"
   },
   "author": "axnux",
   "license": "MIT"
