@@ -1,9 +1,9 @@
 'use strict'
 
-var fs = require('fs')
 var path = require('path')
 var glob = require('glob')
 var gulp = require('gulp')
+var mkdirp = require('mkdirp')
 var _ = require('lodash')
 var plugins = require('gulp-load-plugins')()
 var runSequence = require('run-sequence')
@@ -20,7 +20,7 @@ gulp.task('env:test', function () {
 
 // Make sure upload directory exists
 gulp.task('makeUploadsDir', function () {
-  return fs.mkdir(mergedConfig.uploads.dest, function (err) {
+  return mkdirp(mergedConfig.uploads.dest, function (err) {
     if (err && err.code !== 'EEXIST') {
       console.error(err)
     }
@@ -48,6 +48,9 @@ gulp.task('mocha', function (done) {
       reporter: 'spec',
       timeout: 10000
     }))
+    .on('error', function () {
+      //
+    })
     .on('end', function () {
       done()
     })
