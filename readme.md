@@ -1,33 +1,82 @@
-# Microservices Starter template
+# Microservices Starter template [![wercker status](https://app.wercker.com/status/3990bf39fc888c44f5cd6821df712c87/s "wercker status")](https://app.wercker.com/project/bykey/3990bf39fc888c44f5cd6821df712c87)
 An *experimental* nodejs BDD scaffolding for microservices
 
 Support for **Docker** through **Wercker**
 
-## Prerequisites
+## Start development with local nodejs (recommended)
+### Prerequisites
+- nodejs
+### Instructions
+1. First install the dependencies using `npm install`  
+2. To start with development, you have two options:
+   - **LOCAL** - execute `npm start` and keep it running in terminal  
+       *Note: this start your web app at port 3000 by default.*  
+       *every time you update your js files. need to re-run this.*
+   - **BDD** - execute `npm run bdd` and keep it running in terminal  
+       *Note: this will not start your web app but continuous testing.*  
+       *every time you update your js files. it will auto restart test cases.*
+
+## Alternatives (using Wercker)
+### Prerequisites
 - virtualbox 5.0.20
 - boot2docker-vagrant
 - wercker cli
-- nodejs (optional)
+### Instructions
+For some reason you might don't want to use nodejs in your local machine.   
+Then you can still start development using **wercker cli**
+1. To start with development using **wercker**  
+    execute `wercker dev --expose-ports=true`   
+     (same as using the recommended *LOCAL* mode above)    
+     *Note: it will detect file changes and auto restart web app.*  
+2. If you would like to do **BDD** please refer to `wercker.yml`  
+	```
+	dev:
+	  steps:
+        #
+	    # ...
+        #
+	    # make sure this part is commented out
+	    # - internal/watch:
+	    #     code: npm start
+	    #     reload: true
 
+	    # make sure the code below is not commented
+	    - script:
+	        name: start bdd environment
+	        code: npm run bdd
 
-### Start development with local nodejs
-1. first install the dependencies using `npm install`  
-2. execute `npm run bdd`   and keep it running in terminal
+	```  
+3. To push the development container to docker.  
+    Modify the`wercker.yml` as below
+	```
+	build:
+	  steps:
 
-### Alternatives
-For some reason you might don't want to use nodejs in your local machine. Then you can do this  
-1. first install the dependencies using `wercker build`  
-2. execute `wercker dev`   and keep it running in terminal
+	    # make sure the code below is not commented  
+	     - internal/docker-push:
+	         disable-sync: true
+	         username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
+	         password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
+	         repository: $DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: axnux/media-svc
+	         working-dir: /pipeline/source
+	         cwd: /pipeline/source
+	         cmd: start
+	         entrypoint: /usr/local/bin/npm
+	         tag: debug-build
 
-# Folder structures
-1. Implement all services in *src*  
-2. Implement all routing in *src/SERVICE_NAME/routes*  
-3. Implement all test cases in *test*  
+	```
+    Make sure the $DOCKER_USERNAME, $DOCKER_PASSWORD and $DOCKER_REPO are replaced with actual value.  
+    Then execute `wercker build` in terminal.  
 
-# todo
-1. add deploy pipeline into wercker  
-2. add support for gRPC  
-3. automate build
+## Folder structures
+1. Implement all services in **src**  
+2. Implement all routing in **src/SERVICE_NAME/routes**  
+3. Implement all test cases in **test**
+
+## todo
+1. ~~add deploy pipeline into wercker~~
+2. add support for gRPC
+3. ~~automate build~~
 
 
 ## Credits

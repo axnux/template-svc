@@ -50,14 +50,22 @@ gulp.task('eslint', function () {
     .pipe(plugins.eslint.format())
 })
 
+// prepare mocha code coverage
+gulp.task('prepare-mocha', function (done) {
+  return gulp.src(defaultAssets.server.testSubjectJS)
+    .pipe(plugins.istanbul())
+    .pipe(plugins.istanbul.hookRequire())
+})
+
 // Mocha tests task
-gulp.task('mocha', function (done) {
-  var testSuites = changedTestFiles.length ? changedTestFiles : testAssets.tests.server
+gulp.task('mocha', ['prepare-mocha'], function (done) {
+  var testSuites = testAssets.tests.server
   gulp.src(testSuites)
     .pipe(plugins.mocha({
       reporter: 'spec',
       timeout: 10000
     }))
+    .pipe(plugins.istanbul.writeReports())
     .on('error', function () {
       //
     })
@@ -70,8 +78,28 @@ gulp.task('test:once', function (done) {
   runSequence('env:test', ['eslint', 'makeUploadsDir'], 'mocha', done)
 })
 
+// For bdd
+gulp.task('mocha:live', function (done) {
+  var testSuites = changedTestFiles.length ? changedTestFiles : testAssets.tests.server
+  gulp.src(testSuites)
+    .pipe(plugins.mocha({
+      reporter: 'spec',
+      timeout: 3000
+    }))
+    .on('error', function () {
+      //
+    })
+    .on('end', function () {
+      done()
+    })
+})
+
+gulp.task('run:test', function (done) {
+  runSequence('makeUploadsDir', 'mocha:live', done)
+})
+
 gulp.task('watch:test', function () {
-  gulp.watch([testAssets.tests.server, defaultAssets.server.allJS], ['test:once'])
+  gulp.watch([testAssets.tests.server, defaultAssets.server.allJS], ['run:test'])
   .on('change', function (file) {
     changedTestFiles = []
 
@@ -90,5 +118,5 @@ gulp.task('watch:test', function () {
 })
 
 gulp.task('bdd', function (done) {
-  runSequence('test:once', 'watch:test', done)
+  runSequence('run:test', 'watch:test', done)
 })

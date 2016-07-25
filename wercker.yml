@@ -1,38 +1,94 @@
-# This references the default nodejs container from
-# the Docker Hub: https://registry.hub.docker.com/_/node/
-# If you want Nodesource's container you would reference nodesource/node
-# Read more about containers on our dev center
-# http://devcenter.wercker.com/docs/containers/index.html
-box: node:6
-# This is the build pipeline. Pipelines are the core of wercker
-# Read more about pipelines on our dev center
-# http://devcenter.wercker.com/docs/pipelines/index.html
+box:
+  id: node:6
+  ports: # decide which port to expose to host
+    - "3000"
 
-# You can also use services such as databases. Read more on our dev center:
-# http://devcenter.wercker.com/docs/services/index.html
-# services:
-    # - postgres
-    # http://devcenter.wercker.com/docs/services/postgresql.html
-
-    # - mongo
-    # http://devcenter.wercker.com/docs/services/mongodb.html
-build:
-  # The steps that will be executed on build
-  # Steps make up the actions in your pipeline
-  # Read more about steps on our dev center:
-  # http://devcenter.wercker.com/docs/steps/index.html
+### development workflow ###
+# run the following code in terminal
+# wercker dev --expose-ports=true
+dev: #NODE_ENV=development
   steps:
-    # A step that executes `npm install` command
-    - npm-install
-    # A step that executes `npm test` command
+    - npm-install # comment this out if you have already install npm dependencies
+
+    # you have two options for local development
+    # 1. run dev server at port 3000. auto restart web app on file changes
+    - internal/watch:
+        code: npm start
+        reload: true
+
+    # # 2. run in BDD mode. auto re-run test cases on file changes
+    # - script:
+    #     name: start bdd environment
+    #     code: npm run bdd
+
+# wercker build
+build: #NODE_ENV=development
+  steps:
+    - npm-install # comment this out if you have already install npm dependencies
     - npm-test
-dev:
-  # The steps that will be executed on build
-  # Steps make up the actions in your pipeline
-  # Read more about steps on our dev center:
-  # http://devcenter.wercker.com/docs/steps/index.html
+    # uncomment the following to enable docker image creation
+    # - internal/docker-push:
+    #     disable-sync: true
+    #     username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
+    #     password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
+    #     repository: $DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: axnux/sample-svc
+    #     working-dir: /pipeline/source
+    #     cmd: start
+    #     entrypoint: /usr/local/bin/npm
+    #     tag: debug-build
+
+test: #NODE_ENV=test
   steps:
-    # watch internal changes
     - script:
-        name: start development
-        code: npm run bdd
+        name: named current folder
+        code: pwd
+    - script:
+        name: list current folder
+        code: ls
+    - npm-test
+
+docker:
+  steps:
+    - internal/docker-push:
+        disable-sync: true
+        username: $DOCKER_USERNAME  # define DOCKER_USERNAME in your wercker dashboard
+        password: $DOCKER_PASSWORD  # define DOCKER_PASSWORD in your wercker dashboard
+        working-dir: $WERCKER_SOURCE_DIR
+        env: NODE_ENV=development
+        cmd: start
+        entrypoint: /usr/local/bin/npm
+        tag: development
+        repository: $DOCKER_REPO # replace this with your docker repo name. otherwise define DOCKER_REPO in wercker dashboard
+        author: axnux
+
+### release workflow ###
+build-production: #NODE_ENV=production
+  steps:
+    - script:
+        name: clean npm modules
+        code: rm -rf node_modules/*
+    - script:
+        name: set to production environment
+        code: export NODE_ENV=production
+    - script:
+        name: install minimal npm dependencies
+        code: npm install --production
+
+docker-production:
+  steps:
+    - internal/docker-push:
+        disable-sync: true
+        username: $DOCKER_USERNAME  # define DOCKER_USERNAME in your wercker dashboard
+        password: $DOCKER_PASSWORD  # define DOCKER_PASSWORD in your wercker dashboard
+        working-dir: $WERCKER_SOURCE_DIR
+        env: NODE_ENV=production
+        cmd: start
+        entrypoint: /usr/local/bin/npm
+        tag: production
+        repository: $DOCKER_REPO # replace this with your docker repo name. otherwise define DOCKER_REPO in wercker dashboard
+        author: axnux
+
+
+## advanced
+## to inject environment variable into the container. prefix the environment variable name with X_ in the *.env file below
+##     --environment container_env/build_development.env
