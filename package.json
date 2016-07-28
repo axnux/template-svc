@@ -4,9 +4,11 @@
   "description": "microservices template",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "gulp start",
     "test": "gulp test:once",
-    "bdd": "gulp bdd"
+    "bdd": "gulp bdd",
+    "dev": "gulp dev",
+    "dev:debug": "gulp dev --debug"
   },
   "keywords": [
     "template",
@@ -27,8 +29,12 @@
     "gulp-istanbul": "^1.0.0",
     "gulp-load-plugins": "~1.2.4",
     "gulp-mocha": "~2.2.0",
+    "gulp-node-inspector": "^0.1.0",
+    "gulp-nodemon": "^2.1.0",
     "istanbul": "^0.4.4",
     "mocha": "~2.5.3",
+    "node-inspector": "^0.12.8",
+    "nodemon": "^1.10.0",
     "run-sequence": "~1.2.2",
     "sinon": "~1.17.4",
     "sinon-chai": "~2.8.0",

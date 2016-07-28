@@ -7,14 +7,18 @@ box:
 # run the following code in terminal
 # wercker dev --expose-ports=true
 dev: #NODE_ENV=development
+  box:
+    id: node:6
+    ports:
+      - "3000"  # nodejs port
+      - "1337"  # chrome UI for debugging
+      - "5858"  # port for node-inspector debugging socket
   steps:
     - npm-install # comment this out if you have already install npm dependencies
-
     # you have two options for local development
-    # 1. run dev server at port 3000. auto restart web app on file changes
     - internal/watch:
-        code: npm start
-        reload: true
+      code: npm run dev:debug
+      reload: true
 
     # # 2. run in BDD mode. auto re-run test cases on file changes
     # - script:
@@ -58,7 +62,7 @@ docker:
         cmd: start
         entrypoint: /usr/local/bin/npm
         tag: development
-        repository: $DOCKER_REPO # replace this with your docker repo name. otherwise define DOCKER_REPO in wercker dashboard
+        repository: axnux/media-svc
         author: axnux
 
 ### release workflow ###
@@ -85,7 +89,7 @@ docker-production:
         cmd: start
         entrypoint: /usr/local/bin/npm
         tag: production
-        repository: $DOCKER_REPO # replace this with your docker repo name. otherwise define DOCKER_REPO in wercker dashboard
+        repository: axnux/media-svc
         author: axnux
 
 

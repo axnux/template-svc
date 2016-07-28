@@ -10,6 +10,7 @@ var runSequence = require('run-sequence')
 var testAssets = require('./config/assets/test')
 var defaultAssets = require('./config/assets/default')
 var mergedConfig = require('./config/default')
+var args = require('yargs').argv
 
 var changedTestFiles = []
 
@@ -18,8 +19,12 @@ gulp.task('env:test', function () {
   process.env.NODE_ENV = 'test'
 })
 
+gulp.task('env:dev', function () {
+  process.env.NODE_ENV = 'development'
+})
+
 // Make sure upload directory exists
-gulp.task('makeUploadsDir', function () {
+gulp.task('make-uploads-dir', function () {
   mkdirp(mergedConfig.uploads.dest, function (err) {
     if (err && err.code !== 'EEXIST') {
       console.error(err)
@@ -50,6 +55,30 @@ gulp.task('eslint', function () {
     .pipe(plugins.eslint.format())
 })
 
+gulp.task('nodemon', args.debug ? ['node-inspector'] : null, function () {
+  return plugins.nodemon({
+    script: 'server.js',
+    nodeArgs: [ args.debug ? '--debug' : ''],
+    ext: 'js',
+    verbose: true,
+    watch: _.union(defaultAssets.server.allJS, defaultAssets.server.gulpConfig)
+  })
+})
+
+gulp.task('node-inspector', function () {
+  gulp.src([])
+    .pipe(plugins.nodeInspector({
+      debugPort: 5858,
+      webHost: '0.0.0.0',
+      webPort: 1337,
+      saveLiveEdit: true,
+      preload: false,
+      inject: true,
+      hidden: [ /.wercker/i, /coverage/i, /container_env/i, /node_modules/i],
+      stackTraceLimit: 50
+    }))
+})
+
 // prepare mocha code coverage
 gulp.task('prepare-mocha', function (done) {
   return gulp.src(defaultAssets.server.testSubjectJS)
@@ -74,10 +103,6 @@ gulp.task('mocha', ['prepare-mocha'], function (done) {
     })
 })
 
-gulp.task('test:once', function (done) {
-  runSequence('env:test', ['eslint', 'makeUploadsDir'], 'mocha', done)
-})
-
 // For bdd
 gulp.task('mocha:live', function (done) {
   var testSuites = changedTestFiles.length ? changedTestFiles : testAssets.tests.server
@@ -94,12 +119,12 @@ gulp.task('mocha:live', function (done) {
     })
 })
 
-gulp.task('run:test', function (done) {
-  runSequence('makeUploadsDir', 'mocha:live', done)
+gulp.task('test:marathon', function (done) {
+  runSequence('make-uploads-dir', 'mocha:live', done)
 })
 
 gulp.task('watch:test', function () {
-  gulp.watch([testAssets.tests.server, defaultAssets.server.allJS], ['run:test'])
+  gulp.watch([testAssets.tests.server, defaultAssets.server.allJS], ['test:marathon'])
   .on('change', function (file) {
     changedTestFiles = []
 
@@ -117,6 +142,18 @@ gulp.task('watch:test', function () {
   })
 })
 
+gulp.task('test:once', function (done) {
+  runSequence('env:test', ['eslint', 'make-uploads-dir'], 'mocha', done)
+})
+
 gulp.task('bdd', function (done) {
-  runSequence('run:test', 'watch:test', done)
+  runSequence('env:test', ['test:marathon'], 'watch:test', done)
+})
+
+gulp.task('dev', function (done) {
+  runSequence('env:dev', ['eslint', 'make-uploads-dir'], 'nodemon', done)
+})
+
+gulp.task('start', function (done) {
+  runSequence(['eslint', 'make-uploads-dir'], 'nodemon', done)
 })

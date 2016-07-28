@@ -11,9 +11,12 @@ Support for **Docker** through **Wercker**
 ### Instructions  
 1. First install the dependencies using `npm install`  
 2. To start with development, you have two options:  
-   - **LOCAL** - execute `npm start` and keep it running in terminal  
+   - **LOCAL** - execute `npm run dev` and keep it running in terminal  
        *Note: this start your web app at port 3000 by default.*  
-       *every time you update your js files. need to re-run this.*  
+       *every time you update your js files. it will auto re-run this.*  
+   - **DEBUG** - execute `npm run dev:debug` and keep it running in terminal  
+       *Note: same as the above local mode*  
+       *Open debug console at* `http://127.0.0.1:1337/?port=5858`  
    - **BDD** - execute `npm run bdd` and keep it running in terminal  
        *Note: this will not start your web app but continuous testing.*  
        *every time you update your js files. it will auto restart test cases.*  
@@ -29,8 +32,8 @@ For some reason you might don't want to use nodejs in your local machine.
 Then you can still start development using **wercker cli**  
 1. To start with development using **wercker**  
     execute `wercker dev --expose-ports=true`   
-     (same as using the recommended *LOCAL* mode above)    
-     *Note: it will detect file changes and auto restart web app.*  
+     (same as using the recommended *DEBUG* mode above)    
+     *Open debug console at* `http://DOCKER_HOST_IP:1337/?port=5858`   
 2. If you would like to do **BDD** please refer to `wercker.yml`  
 ```
 dev:
@@ -40,7 +43,7 @@ dev:
     #
     # make sure this part is commented out
     # - internal/watch:
-    #     code: npm start
+    #     code: npm run dev:debug
     #     reload: true
 
     # make sure the code below is not commented
