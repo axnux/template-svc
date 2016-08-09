@@ -34,7 +34,8 @@ Then you can still start development using **wercker cli**
      (same as using the recommended *DEBUG* mode above)    
      *Open debug console at* `http://DOCKER_HOST_IP:1337/?port=5858`   
 2. If you would like to do **BDD** please refer to `wercker.yml`  
-```
+
+```yml
 dev:
   steps:
     #
@@ -49,11 +50,12 @@ dev:
     - script:
         name: start bdd environment
         code: npm run bdd
+```
 
-```  
 3. To push the development container to docker.  
     Modify the`wercker.yml` as below  
-```
+
+```yml
 build:
   steps:
 
@@ -64,24 +66,33 @@ build:
          password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
          repository: $DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: axnux/media-svc
          working-dir: /pipeline/source
-         cwd: /pipeline/source
          cmd: start
          entrypoint: /usr/local/bin/npm
          tag: debug-build
-
 ```
+
+Make sure setting up **X_DOCKER_USERNAME**, **X_DOCKER_PASSWORD**, **X_DOCKER_REPO** in the local.env file  
+Then execute the following command in terminal
+`wercker --environment config/container_env/local.env build`  
+#### OR  
 Make sure the **$DOCKER_USERNAME**, **$DOCKER_PASSWORD** and **$DOCKER_REPO** are replaced with actual value.  
-Then execute `wercker build` in terminal.  
+Then execute `wercker build` in terminal  
+
 
 ## Folder structures
-1. Implement all services in **src**  
-2. Implement all routing in **src/SERVICE_NAME/routes**  
-3. Implement all test cases in **test**
+1. Business logics in **src**  
+2. API routes in **src/SERVICE_NAME/routes**   
+3. Test cases in **test**  
+4. API doc & Test coverage report **docs**  
+5. Configuration files for various environments **config/env**  
+6. Configuration file that sit in your local machine only **config/env/local/default.js**  
+7. Environment variable for wercker runtime **config/container_env**  
 
-## todo
-1. ~~add deploy pipeline into wercker~~
-2. add support for gRPC
-3. ~~automate build~~
+```shell
+wercker --environment config/container_env/local.env build
+# OR
+wercker --environment config/container_env/local.env dev
+```
 
 
 ## Credits
