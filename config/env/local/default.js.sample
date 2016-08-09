@@ -1,0 +1,21 @@
+'use strict'
+
+// rename this file to default.js
+// use your actual secret key id and secret access key
+module.exports = {
+  s3Options: {
+    accessKeyId: 'YOUR_ACTUAL_ACCESS_KEY_ID',
+    secretAccessKey: 'YOUR_ACTUAL_SECRET_ACCESS_KEY',
+    region: 'YOUR_ACTUAL_REGION'
+  },
+  'uploads': {
+    s3Bucket: 'YOUR_S3_BUCKET'
+  }
+}
+
+// S3_SECRET_ACCESS_KEY
+// S3_ACCESS_KEY_ID
+// PORT
+// HOST
+// S3_BUCKET // bucket for upload
+// UPLOAD_DIR // folder for upload

@@ -81,9 +81,20 @@ var initGlobalConfig = function () {
 
   // Get the default config
   var defaultConfig = require(path.join(process.cwd(), 'config/env/default'))
-  var environmentConfig = require(path.join(process.cwd(), 'config/env/', process.env.NODE_ENV)) || {}
-  var config = _.merge(defaultConfig, environmentConfig)
+  var environmentConfig = {}
+  var localDefaultConfig = {}
+  try {
+    environmentConfig = require(path.join(process.cwd(), 'config/env/', process.env.NODE_ENV)) || {}
+  } catch (e) {
+    //
+  }
+  try {
+    localDefaultConfig = require(path.join(process.cwd(), 'config/env/', 'local/default')) || {}
+  } catch (e) {
+    //
+  }
 
+  var config = _.merge(defaultConfig, environmentConfig, localDefaultConfig)
   // Initialize global globbed files
   initGlobalConfigFiles(config, assets)
 

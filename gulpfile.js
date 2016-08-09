@@ -7,12 +7,19 @@ var mkdirp = require('mkdirp')
 var _ = require('lodash')
 var plugins = require('gulp-load-plugins')()
 var runSequence = require('run-sequence')
-var testAssets = require('./config/assets/test')
-var defaultAssets = require('./config/assets/default')
-var mergedConfig = require('./config/default')
+  // var swagger2aglio = require('swagger2aglio')
 var args = require('yargs').argv
 
 var changedTestFiles = []
+var testAssets = {}
+var defaultAssets = {}
+var mergedConfig = {}
+
+gulp.task('load:config', function () {
+  testAssets = require('./config/assets/test')
+  defaultAssets = require('./config/assets/default')
+  mergedConfig = require('./config/default')
+})
 
 // Set NODE_ENV to 'test'
 gulp.task('env:test', function () {
@@ -21,6 +28,10 @@ gulp.task('env:test', function () {
 
 gulp.task('env:dev', function () {
   process.env.NODE_ENV = 'development'
+})
+
+gulp.task('env:prod', function () {
+  process.env.NODE_ENV = 'production'
 })
 
 // Make sure upload directory exists
@@ -58,7 +69,7 @@ gulp.task('eslint', function () {
 gulp.task('nodemon', args.debug ? ['node-inspector'] : null, function () {
   return plugins.nodemon({
     script: 'server.js',
-    nodeArgs: [ args.debug ? '--debug' : ''],
+    nodeArgs: [args.debug ? '--debug' : ''],
     ext: 'js',
     verbose: true,
     watch: _.union(defaultAssets.server.allJS, defaultAssets.server.gulpConfig)
@@ -74,7 +85,7 @@ gulp.task('node-inspector', function () {
       saveLiveEdit: true,
       preload: false,
       inject: true,
-      hidden: [ /.wercker/i, /coverage/i, /container_env/i, /node_modules/i],
+      hidden: [/.wercker/i, /docs/i, /node_modules/i],
       stackTraceLimit: 50
     }))
 })
@@ -89,14 +100,23 @@ gulp.task('prepare-mocha', function (done) {
 // Mocha tests task
 gulp.task('mocha', ['prepare-mocha'], function (done) {
   var testSuites = testAssets.tests.server
+
+  console.log('run test on files')
+  console.log(testSuites)
+
+  var istanbulOpts = {
+    dir: './docs/test_coverage',
+    reporters: ['lcov', 'text', 'text-summary']
+  }
+
   gulp.src(testSuites)
     .pipe(plugins.mocha({
       reporter: 'spec',
       timeout: 10000
     }))
-    .pipe(plugins.istanbul.writeReports())
+    .pipe(plugins.istanbul.writeReports(istanbulOpts))
     .on('error', function () {
-      //
+      console.log('Unable to run mocha test')
     })
     .on('end', function () {
       done()
@@ -112,7 +132,7 @@ gulp.task('mocha:live', function (done) {
       timeout: 3000
     }))
     .on('error', function () {
-      //
+      console.log('Unable to run mocha test continuously')
     })
     .on('end', function () {
       done()
@@ -125,35 +145,57 @@ gulp.task('test:marathon', function (done) {
 
 gulp.task('watch:test', function () {
   gulp.watch([testAssets.tests.server, defaultAssets.server.allJS], ['test:marathon'])
-  .on('change', function (file) {
-    changedTestFiles = []
+    .on('change', function (file) {
+      changedTestFiles = []
 
-    // iterate through server test glob patterns
-    _.forEach(testAssets.tests.server, function (pattern) {
-      // determine if the changed (watched) file is a server test
-      _.forEach(glob.sync(pattern), function (f) {
-        var filePath = path.resolve(f)
+      // iterate through server test glob patterns
+      _.forEach(testAssets.tests.server, function (pattern) {
+        // determine if the changed (watched) file is a server test
+        _.forEach(glob.sync(pattern), function (f) {
+          var filePath = path.resolve(f)
 
-        if (filePath === path.resolve(file.path)) {
-          changedTestFiles.push(f)
-        }
+          if (filePath === path.resolve(file.path)) {
+            changedTestFiles.push(f)
+          }
+        })
       })
     })
-  })
 })
 
+// "api:doc": "gulp api:doc",
+// "swagger2aglio": "^1.2.16"
+
+// gulp.task('api:doc', function () {
+//   var opts = {
+//     themeVariables: 'slate',
+//     // themeTemplate: 'triple',
+//     input: './docs/api.yml',
+//     output: './docs/api_doc/api.html'
+//   }
+//   swagger2aglio.convert(opts, function (err, html) {
+//     if (err) {
+//       console.log('Unable to generate api doc')
+//     }
+//   })
+// })
+
+// external interface
 gulp.task('test:once', function (done) {
-  runSequence('env:test', ['eslint', 'make-uploads-dir'], 'mocha', done)
+  runSequence('env:test', 'load:config', ['eslint', 'make-uploads-dir'], 'mocha', done)
 })
 
 gulp.task('bdd', function (done) {
-  runSequence('env:test', ['test:marathon'], 'watch:test', done)
+  runSequence('env:test', 'load:config', ['test:marathon'], 'watch:test', done)
 })
 
 gulp.task('dev', function (done) {
-  runSequence('env:dev', ['eslint', 'make-uploads-dir'], 'nodemon', done)
+  runSequence('env:dev', 'load:config', ['eslint', 'make-uploads-dir'], 'nodemon', done)
 })
 
 gulp.task('start', function (done) {
-  runSequence(['eslint', 'make-uploads-dir'], 'nodemon', done)
+  runSequence('load:config', ['eslint', 'make-uploads-dir'], 'nodemon', done)
+})
+
+gulp.task('release:build', function (done) {
+  runSequence('env:prod', 'load:config', 'make-uploads-dir', done)
 })

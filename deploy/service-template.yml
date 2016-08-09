@@ -1,0 +1,42 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: template-svc
+spec:
+  selector:
+    name: template-svc-name
+  type: LoadBalancer # comment this out if you do not want your service to be accessible from outside of the private network
+  ports:
+    - name: template-svc-name-lb
+      protocol: TCP
+      port: {{DEPLOY_SERVICE_PORT=2200}}
+      targetPort: {{TEMPLATE_SERVICE_TARGET_PORT=3000}}
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: template-svc-name
+spec:
+  replicas: {{REPLICA_COUNT=1}}
+  template:
+    metadata:
+      labels:
+        name: template-svc-name
+        version: v0
+    spec:
+      # uncomment the image pull secrets if you are using private docker registry
+      # imagePullSecrets:
+      #   - name: {{IMAGE_PULL_SECRET}}
+      containers:
+        - name: template-svc-name
+          image: axnux/template-svc:{{DEPLOY_IMAGE_TAG=development}} # your docker hub repo name
+          # uncomment following if you are using AWS ECR
+          # image: {{AWS_ECR_ID}}.dkr.ecr.{{AWS_ECR_REGION}}.amazonaws.com/template-svc:{{DEPLOY_IMAGE_TAG=development}}
+          volumeMounts:
+            - name: upload-vol
+              mountPath: {{TEMPLATE_SERVICE_UPLOAD_DIR=./tmp/upload}}
+          ports:
+            - containerPort: {{TEMPLATE_SERVICE_TARGET_PORT}}
+      volumes:
+        - name: upload-vol
+          emptyDir: {}

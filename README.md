@@ -1,4 +1,4 @@
-# Microservices Starter template [![wercker status](https://app.wercker.com/status/3990bf39fc888c44f5cd6821df712c87/s "wercker status")](https://app.wercker.com/project/bykey/3990bf39fc888c44f5cd6821df712c87)
+# Microservices Starter template [![wercker status](https://app.wercker.com/status/3990bf39fc888c44f5cd6821df712c87/s "wercker status")](https://app.wercker.com/project/bykey/3990bf39fc888c44f5cd6821df712c87) [![Dependency Status](https://gemnasium.com/badges/github.com/axnux/template-svc.svg)](https://gemnasium.com/github.com/axnux/template-svc)
 
 An *experimental* nodejs BDD scaffolding for microservices
 
@@ -23,8 +23,7 @@ Support for **Docker** through **Wercker**
 
 ## Alternatives (using Wercker)
 ### Prerequisites  
-- virtualbox 5.0.20  
-- boot2docker-vagrant  
+- docker for Mac/Windows/Linux (*or virtualbox 5.0.20 + boot2docker-vagrant*)  
 - wercker cli  
 
 ### Instructions  

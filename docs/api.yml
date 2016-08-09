@@ -1,0 +1,46 @@
+swagger: "2.0"
+info:
+  version: "0.1.0"
+  title: Template service
+
+host: 0.0.0.0 # change to real url in production
+
+basePath: /api/v1
+
+schemes:
+  - http
+  - https
+
+consumes:
+  - application/x-www-form-urlencoded
+
+produces:
+  - application/json
+
+tags:
+  - name: test
+    description: Testing only
+
+
+paths:
+  /book:
+    get:
+      description: Testing read book
+      operationId: readBook
+      tags:
+        - test
+        - book
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Notice"
+
+definitions:
+  Notice:
+    type: object
+    required:
+      - response
+    properties:
+      response:
+        type: string

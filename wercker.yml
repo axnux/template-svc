@@ -41,29 +41,71 @@ build: #NODE_ENV=development
     #     entrypoint: /usr/local/bin/npm
     #     tag: debug-build
 
-test: #NODE_ENV=test
+    # optional slack notifier
+    # after-steps: # send notification to slack
+    #   - slack-notifier:
+    #       url: $SLACK_WEB_HOOK
+    #       channel: updates
+    #       username: Wercker Bot
+
+# optional step.
+update-doc:
+  box:
+    id: axnux/swagger2aglio:latest
   steps:
     - script:
-        name: named current folder
-        code: pwd
-    - script:
-        name: list current folder
-        code: ls
-    - npm-test
+        name: generate api doc
+        code: swagger2aglio --theme-variables slate --input ./docs/api.yml --output ./docs/api_doc/api.html
+    - s3sync: # synchronize api docs and test coverage report to s3
+        source_dir: ./docs/
+        delete_removed: true
+        bucket_url: $S3_TEST_REPORT_BUCKET_URL/$WERCKER_GIT_REPOSITORY/$WERCKER_MAIN_PIPELINE_STARTED-$WERCKER_GIT_COMMIT/ # eg: s3://bucket-name/ # make sure the trailing '/' is always there
+        key_id: $S3_TEST_REPORT_ACCESS_KEY_ID
+        key_secret: $S3_TEST_REPORT_SECRET_ACCESS_KEY
 
 docker:
   steps:
+    # push to docker hub
     - internal/docker-push:
         disable-sync: true
         username: $DOCKER_USERNAME  # define DOCKER_USERNAME in your wercker dashboard
         password: $DOCKER_PASSWORD  # define DOCKER_PASSWORD in your wercker dashboard
         working-dir: $WERCKER_SOURCE_DIR
-        env: NODE_ENV=development
-        cmd: start
-        entrypoint: /usr/local/bin/npm
+        env: |
+          NODE_ENV=development
+          S3_ACCESS_KEY_ID=$TEMPLATE_AWS_S3_KEY_ID
+          S3_SECRET_ACCESS_KEY=$TEMPLATE_AWS_S3_SECRET_ACCESS_KEY
+          S3_REGION=$TEMPLATE_AWS_S3_REGION
+          S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
+          UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
+          PORT=$TEMPLATE_PORT
+          HOST=$TEMPLATE_HOST
+        entrypoint: /usr/local/bin/node server.js
         tag: development
-        repository: axnux/media-svc
+        repository: axnux/template-svc
         author: axnux
+
+    # push to AWS ECR
+    # - internal/docker-push:
+    #     disable-sync: true
+    #     aws-access-key: $AWS_ECR_ACCESS_KEY_ID
+    #     aws-secret-key: $AWS_ECR_SECRET_ACCESS_KEY
+    #     aws-region: $AWS_ECR_REGION
+    #     aws-registry-id: $AWS_ECR_REGISTRY_ID
+    #     working-dir: $WERCKER_SOURCE_DIR
+    #     env: |
+    #       NODE_ENV=development
+    #       S3_ACCESS_KEY_ID=$TEMPLATE_AWS_S3_KEY_ID
+    #       S3_SECRET_ACCESS_KEY=$TEMPLATE_AWS_S3_SECRET_ACCESS_KEY
+    #       S3_REGION=$TEMPLATE_AWS_S3_REGION
+    #       S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
+    #       UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
+    #       PORT=$TEMPLATE_PORT
+    #       HOST=$TEMPLATE_HOST
+    #     entrypoint: /usr/local/bin/node server.js
+    #     tag: development
+    #     repository: template-svc
+    #     author: axnux
 
 ### release workflow ###
 build-production: #NODE_ENV=production
@@ -71,26 +113,144 @@ build-production: #NODE_ENV=production
     - script:
         name: clean npm modules
         code: rm -rf node_modules/*
+    - npm-install
+    - npm-test
     - script:
         name: set to production environment
         code: export NODE_ENV=production
     - script:
-        name: install minimal npm dependencies
-        code: npm install --production
+        name: release build
+        code: npm run release:build
+    - script:
+        name: npm prune
+        code: npm prune
+    - script:
+        name: list node_modules
+        code: ls ./node_modules
+    # TODO static build nodejs
+    - script:
+        name: copy files
+        code: |
+          cp $(which node) "$WERCKER_OUTPUT_DIR"
+          rm -rf ./node_modules/.bin
+          cp -RL ./node_modules ./src ./deploy ./config ./tmp ./server.js ./package.json "$WERCKER_OUTPUT_DIR"
 
 docker-production:
+  box:
+    id: node:6-slim
   steps:
+    # push to docker hub
     - internal/docker-push:
         disable-sync: true
         username: $DOCKER_USERNAME  # define DOCKER_USERNAME in your wercker dashboard
         password: $DOCKER_PASSWORD  # define DOCKER_PASSWORD in your wercker dashboard
         working-dir: $WERCKER_SOURCE_DIR
-        env: NODE_ENV=production
-        cmd: start
-        entrypoint: /usr/local/bin/npm
+        env: |
+          NODE_ENV=production
+          S3_ACCESS_KEY_ID=$TEMPLATE_AWS_S3_KEY_ID
+          S3_SECRET_ACCESS_KEY=$TEMPLATE_AWS_S3_SECRET_ACCESS_KEY
+          S3_REGION=$TEMPLATE_AWS_S3_REGION
+          S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
+          UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
+          PORT=$TEMPLATE_PORT
+          HOST=$TEMPLATE_HOST
+        cmd: ./node ./server.js
         tag: production
-        repository: axnux/media-svc
+        repository: axnux/template-svc
         author: axnux
+
+    # push to AWS ECR
+    # - internal/docker-push:
+    #     disable-sync: true
+    #     aws-access-key: $AWS_ECR_ACCESS_KEY_ID
+    #     aws-secret-key: $AWS_ECR_SECRET_ACCESS_KEY
+    #     aws-region: $AWS_ECR_REGION
+    #     aws-registry-id: $AWS_ECR_REGISTRY_ID
+    #     working-dir: $WERCKER_SOURCE_DIR
+    #     env: |
+    #       NODE_ENV=production
+    #       S3_ACCESS_KEY_ID=$TEMPLATE_AWS_S3_KEY_ID
+    #       S3_SECRET_ACCESS_KEY=$TEMPLATE_AWS_S3_SECRET_ACCESS_KEY
+    #       S3_REGION=$TEMPLATE_AWS_S3_REGION
+    #       S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
+    #       UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
+    #       PORT=$TEMPLATE_PORT
+    #       HOST=$TEMPLATE_HOST
+    #     cmd: ./node ./server.js
+    #     tag: production
+    #     repository: template-svc
+    #     author: axnux
+
+  # after-steps: # send notification to slack
+  #   - slack-notifier:
+  #       url: $SLACK_WEB_HOOK
+  #       channel: updates
+  #       username: Wercker Bot
+  #       notify_on: failed
+
+
+# if you are launching your kubernetes stack with kube-aws
+# you already have all the necessary pem files in place
+k8s-deploy:
+  box:
+    id: axnux/alpine-aws-ecr:latest
+  steps:
+    - script:
+      name: download files for kubernetes
+      code: |
+        AWS_ACCESS_KEY_ID=$S3_ACCESS_KEY_FOR_KUBERNETES AWS_SECRET_ACCESS_KEY=$S3_SECRET_KEY_FOR_KUBERNETES AWS_DEFAULT_REGION=$S3_REGION_FOR_KUBERNETES \
+          aws s3 cp s3://$S3_BUCKET_FOR_KUBERNETES/admin-key.pem deploy/admin-key.pem
+        AWS_ACCESS_KEY_ID=$S3_ACCESS_KEY_FOR_KUBERNETES AWS_SECRET_ACCESS_KEY=$S3_SECRET_KEY_FOR_KUBERNETES AWS_DEFAULT_REGION=$S3_REGION_FOR_KUBERNETES \
+          aws s3 cp s3://$S3_BUCKET_FOR_KUBERNETES/ca.pem deploy/ca.pem
+        AWS_ACCESS_KEY_ID=$S3_ACCESS_KEY_FOR_KUBERNETES AWS_SECRET_ACCESS_KEY=$S3_SECRET_KEY_FOR_KUBERNETES AWS_DEFAULT_REGION=$S3_REGION_FOR_KUBERNETES \
+          aws s3 cp s3://$S3_BUCKET_FOR_KUBERNETES/admin.pem deploy/admin.pem
+    - xun91/bash-templater:
+      template: deploy/service-template.yml
+      output: deploy/zap.yml
+      # IMAGE_PULL_SECRET=$DEPLOY_IMAGE_PULL_SECRET # uncomment it if you are using private docker registry
+      parameters:
+        AWS_ECR_ID=$AWS_ECR_REGISTRY_ID
+        AWS_ECR_REGION=$AWS_ECR_REGION
+        DEPLOY_IMAGE_TAG=$DEPLOY_IMAGE_TAG
+        TEMPLATE_SERVICE_TARGET_PORT=$TEMPLATE_PORT
+        DEPLOY_SERVICE_PORT=$DEPLOY_SERVICE_PORT
+        TEMPLATE_SERVICE_UPLOAD_DIR="/tmp/upload" # or you can use env var such as $TEMPLATE_UPLOAD_DIR
+    - script:
+      name: print deployment file
+      code: cat deploy/zap.yml
+    # workaround
+    # https://github.com/whereisaaron/kubernetes-aws-scripts/blob/master/create-ecr-imagepullsecret.sh
+    # uncomment this only if you are using AWS ECR
+    # - script:
+    #   name: generate docker config secret
+    #   code: |
+    #     AWS_AUTH_TOKEN=`AWS_ACCESS_KEY_ID=$AWS_ECR_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_ECR_SECRET_ACCESS_KEY AWS_DEFAULT_REGION=$AWS_ECR_REGION aws ecr --region=eu-west-1 get-authorization-token --output text --query authorizationData[].authorizationToken | base64 -d | cut -d: -f2`
+    #     export AWS_ECR_AUTH_TOKEN=$AWS_AUTH_TOKEN
+    # - script:
+    #   name: generate secret for kubernetes
+    #   command: |
+    #     kubectl --server="$KUBERNETES_MASTER" \
+    #       --certificate-authority="deploy/ca.pem" \
+    #       --client-certificate="deploy/admin.pem" \
+    #       --client-key="deploy/admin-key.pem" \
+    #       delete secret --ignore-not-found $DEPLOY_IMAGE_PULL_SECRET
+    #     kubectl --server="$KUBERNETES_MASTER" \
+    #       --certificate-authority="deploy/ca.pem" \
+    #       --client-certificate="deploy/admin.pem" \
+    #       --client-key="deploy/admin-key.pem" \
+    #       create secret docker-registry $DEPLOY_IMAGE_PULL_SECRET \
+    #        --docker-server=https://$AWS_ECR_REGISTRY_ID.dkr.ecr.$AWS_ECR_REGION.amazonaws.com \
+    #        --docker-username=AWS \
+    #        --docker-password="$AWS_ECR_AUTH_TOKEN" \
+    #        --docker-email=""
+    - script:
+      name: deploy to kubernetes
+      code: |
+        kubectl --server="$KUBERNETES_MASTER" \
+          --certificate-authority="deploy/ca.pem" \
+          --client-certificate="deploy/admin.pem" \
+          --client-key="deploy/admin-key.pem" \
+          apply -f deploy/zap.yml
 
 
 ## advanced
