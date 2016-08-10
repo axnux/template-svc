@@ -10,7 +10,7 @@ Support for **Docker** through **Wercker**
 
 ### Instructions  
 1. First install the dependencies using `npm install`  
-2. To start with development, you have two options:  
+2. To start with development, you have 3 options:  
    - **LOCAL** - execute `npm run dev` and keep it running in terminal  
        *Note: this start your web app at port 3000 by default.*  
        *every time you update your js files. it will auto re-run this.*  
@@ -92,6 +92,15 @@ Then execute `wercker build` in terminal
 wercker --environment config/container_env/local.env build
 # OR
 wercker --environment config/container_env/local.env dev
+```
+
+
+## Logging
+
+```js
+// { error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5 }
+winston.warn('something might go wrong')
+winston.error('something went wrong')
 ```
 
 

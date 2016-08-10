@@ -24,15 +24,14 @@ spec:
         name: template-svc-name
         version: v0
     spec:
-      # uncomment the image pull secrets if you are using private docker registry
-      # imagePullSecrets:
-      #   - name: {{IMAGE_PULL_SECRET}}
+      imagePullSecrets:
+        - name: {{IMAGE_PULL_SECRET}}
       containers:
         - name: template-svc-name
-          image: axnux/template-svc:{{DEPLOY_IMAGE_TAG=development}} # your docker hub repo name
+          image: {{AWS_ECR_ID}}.dkr.ecr.{{AWS_ECR_REGION}}.amazonaws.com/template-svc:{{DEPLOY_IMAGE_TAG=development}}
           volumeMounts:
             - name: upload-vol
-              mountPath: {{TEMPLATE_SERVICE_UPLOAD_DIR=/tmp/upload}}
+              mountPath: {{TEMPLATE_SERVICE_UPLOAD_DIR=./tmp/upload}}
           ports:
             - containerPort: {{TEMPLATE_SERVICE_TARGET_PORT}}
       volumes:

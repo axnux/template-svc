@@ -1,6 +1,7 @@
 'use strict'
 
 module.exports = {
+  appName: process.env.APP_NAME || 'template-svc',
   port: process.env.PORT || 3000,
   host: process.env.HOST || '0.0.0.0',
   s3Options: {

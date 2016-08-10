@@ -7,7 +7,6 @@ var mkdirp = require('mkdirp')
 var _ = require('lodash')
 var plugins = require('gulp-load-plugins')()
 var runSequence = require('run-sequence')
-  // var swagger2aglio = require('swagger2aglio')
 var args = require('yargs').argv
 
 var changedTestFiles = []
@@ -161,23 +160,6 @@ gulp.task('watch:test', function () {
       })
     })
 })
-
-// "api:doc": "gulp api:doc",
-// "swagger2aglio": "^1.2.16"
-
-// gulp.task('api:doc', function () {
-//   var opts = {
-//     themeVariables: 'slate',
-//     // themeTemplate: 'triple',
-//     input: './docs/api.yml',
-//     output: './docs/api_doc/api.html'
-//   }
-//   swagger2aglio.convert(opts, function (err, html) {
-//     if (err) {
-//       console.log('Unable to generate api doc')
-//     }
-//   })
-// })
 
 // external interface
 gulp.task('test:once', function (done) {

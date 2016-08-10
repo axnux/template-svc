@@ -78,8 +78,6 @@ docker:
           S3_REGION=$TEMPLATE_AWS_S3_REGION
           S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
           UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
-          PORT=$TEMPLATE_PORT
-          HOST=$TEMPLATE_HOST
         entrypoint: /usr/local/bin/node server.js
         tag: development
         repository: axnux/template-svc
@@ -100,8 +98,6 @@ docker:
     #       S3_REGION=$TEMPLATE_AWS_S3_REGION
     #       S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
     #       UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
-    #       PORT=$TEMPLATE_PORT
-    #       HOST=$TEMPLATE_HOST
     #     entrypoint: /usr/local/bin/node server.js
     #     tag: development
     #     repository: template-svc
@@ -152,8 +148,6 @@ docker-production:
           S3_REGION=$TEMPLATE_AWS_S3_REGION
           S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
           UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
-          PORT=$TEMPLATE_PORT
-          HOST=$TEMPLATE_HOST
         cmd: ./node ./server.js
         tag: production
         repository: axnux/template-svc
@@ -174,8 +168,6 @@ docker-production:
     #       S3_REGION=$TEMPLATE_AWS_S3_REGION
     #       S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
     #       UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
-    #       PORT=$TEMPLATE_PORT
-    #       HOST=$TEMPLATE_HOST
     #     cmd: ./node ./server.js
     #     tag: production
     #     repository: template-svc
@@ -207,14 +199,15 @@ k8s-deploy:
     - xun91/bash-templater:
       template: deploy/service-template.yml
       output: deploy/zap.yml
+      # anything that is declared here will be available as parameters in servie-template.yml file
       # IMAGE_PULL_SECRET=$DEPLOY_IMAGE_PULL_SECRET # uncomment it if you are using private docker registry
-      parameters:
+      parameters: |
         AWS_ECR_ID=$AWS_ECR_REGISTRY_ID
         AWS_ECR_REGION=$AWS_ECR_REGION
         DEPLOY_IMAGE_TAG=$DEPLOY_IMAGE_TAG
         TEMPLATE_SERVICE_TARGET_PORT=$TEMPLATE_PORT
         DEPLOY_SERVICE_PORT=$DEPLOY_SERVICE_PORT
-        TEMPLATE_SERVICE_UPLOAD_DIR="/tmp/upload" # or you can use env var such as $TEMPLATE_UPLOAD_DIR
+        TEMPLATE_SERVICE_UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
     - script:
       name: print deployment file
       code: cat deploy/zap.yml

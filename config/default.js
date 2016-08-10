@@ -3,6 +3,7 @@
 var _ = require('lodash')
 var glob = require('glob')
 var path = require('path')
+var logger = require('./logger')
 
 /**
  * Get files by glob patterns
@@ -74,6 +75,7 @@ var initGlobalConfigFiles = function (config, assets) {
 var initGlobalConfig = function () {
   // Validate NODE_ENV existence
   validateEnvironmentVariable()
+  logger.setup()
 
   var defaultAssets = require(path.join(process.cwd(), 'config/assets/default'))
   var environmentAssets = require(path.join(process.cwd(), 'config/assets/', process.env.NODE_ENV)) || {}
@@ -97,6 +99,7 @@ var initGlobalConfig = function () {
   var config = _.merge(defaultConfig, environmentConfig, localDefaultConfig)
   // Initialize global globbed files
   initGlobalConfigFiles(config, assets)
+  logger.prepareFilter(config.appName)
 
   // Expose configuration utilities
   config.utils = {
