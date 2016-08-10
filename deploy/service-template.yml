@@ -30,6 +30,8 @@ spec:
       containers:
         - name: template-svc-name
           image: axnux/template-svc:{{DEPLOY_IMAGE_TAG=development}} # your docker hub repo name
+          # if using aws ecr. please use the following
+          # image: {{AWS_ECR_ID}}.dkr.ecr.{{AWS_ECR_REGION}}.amazonaws.com/template-svc:{{DEPLOY_IMAGE_TAG=development}}
           volumeMounts:
             - name: upload-vol
               mountPath: {{TEMPLATE_SERVICE_UPLOAD_DIR=/tmp/upload}}
