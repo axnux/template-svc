@@ -16,9 +16,9 @@ dev: #NODE_ENV=development
   steps:
     - npm-install # comment this out if you have already install npm dependencies
     # you have two options for local development
-    - internal/watch:
-      code: npm run dev:debug
-      reload: true
+    - script:
+        name: start dev environment
+        code: npm run dev:debug
 
     # # 2. run in BDD mode. auto re-run test cases on file changes
     # - script:

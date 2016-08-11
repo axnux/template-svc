@@ -42,15 +42,15 @@ dev:
     # ...
     #
     # make sure this part is commented out
-    # - internal/watch:
+    # - script:
+    #     name: start dev environment
     #     code: npm run dev:debug
-    #     reload: true
 
     # make sure the code below is not commented
     - script:
         name: start bdd environment
         code: npm run bdd
-```
+```  
 
 3. To push the development container to docker.  
     Modify the`wercker.yml` as below  

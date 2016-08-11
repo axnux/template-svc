@@ -113,13 +113,14 @@ gulp.task('mocha', ['prepare-mocha'], function (done) {
       reporter: 'spec',
       timeout: 10000
     }))
-    .pipe(plugins.istanbul.writeReports(istanbulOpts))
     .on('error', function () {
-      console.log('Unable to run mocha test')
+      console.log('Failed mocha test!')
+      process.exit(1)
     })
     .on('end', function () {
       done()
     })
+    .pipe(plugins.istanbul.writeReports(istanbulOpts))
 })
 
 // For bdd
@@ -131,7 +132,7 @@ gulp.task('mocha:live', function (done) {
       timeout: 3000
     }))
     .on('error', function () {
-      console.log('Unable to run mocha test continuously')
+      console.log('Failed mocha test!')
     })
     .on('end', function () {
       done()
