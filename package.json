@@ -35,13 +35,15 @@
     "gulp-node-inspector": "~0.1.0",
     "gulp-nodemon": "~2.1.0",
     "istanbul": "~0.4.4",
+    "mkdirp": "~0.5.1",
     "mocha": "~3.0.0",
     "node-inspector": "~0.12.8",
     "nodemon": "~1.10.0",
     "run-sequence": "~1.2.2",
     "sinon": "~1.17.4",
     "sinon-chai": "~2.8.0",
-    "supertest": "~2.0.0"
+    "supertest": "~2.0.0",
+    "yargs": "~4.8.1"
   },
   "author": "axnux",
   "license": "MIT"
