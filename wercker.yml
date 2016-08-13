@@ -64,6 +64,8 @@ update-doc:
         key_secret: $S3_TEST_REPORT_SECRET_ACCESS_KEY
 
 docker:
+  box:
+    id: axnux/node-gulp:latest
   steps:
     # push to docker hub
     - internal/docker-push:
@@ -78,7 +80,7 @@ docker:
           S3_REGION=$TEMPLATE_AWS_S3_REGION
           S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
           UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
-        entrypoint: /usr/local/bin/node server.js
+        entrypoint: gulp dev --debug
         tag: development
         repository: axnux/template-svc
         author: axnux
@@ -205,6 +207,7 @@ k8s-deploy:
         AWS_ECR_ID=$AWS_ECR_REGISTRY_ID
         AWS_ECR_REGION=$AWS_ECR_REGION
         DEPLOY_IMAGE_TAG=$DEPLOY_IMAGE_TAG
+        IMAGE_PULL_SECRET=$DEPLOY_IMAGE_PULL_SECRET
         TEMPLATE_SERVICE_TARGET_PORT=$TEMPLATE_PORT
         DEPLOY_SERVICE_PORT=$DEPLOY_SERVICE_PORT
         TEMPLATE_SERVICE_UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
@@ -248,4 +251,4 @@ k8s-deploy:
 
 ## advanced
 ## to inject environment variable into the container. prefix the environment variable name with X_ in the *.env file below
-##     --environment container_env/build_development.env
+##     --environment config/container_env/build_development.env

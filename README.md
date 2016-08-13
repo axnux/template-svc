@@ -98,7 +98,7 @@ wercker --environment config/container_env/local.env dev
 ## Logging
 
 ```js
-// { error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5 }
+// { emerg: 0, alert: 1, crit: 2, error: 3, warning: 4, notice: 5, info: 6, debug: 7 }
 winston.warn('something might go wrong')
 winston.error('something went wrong')
 ```
