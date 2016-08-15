@@ -28,8 +28,34 @@ dev: #NODE_ENV=development
 # wercker build
 build: #NODE_ENV=development
   steps:
+    # export environment variables from s3 repo
+    - script:
+        name: read s3 config for wercker
+        code: |
+          if [ -f "config/container_env/master.s3.config" ]; then
+            MASTER_S3_CONFIG="$(echo "$(cat config/container_env/master.s3.config | base64)")"
+          fi
+          MASTER_S3_CONFIG_CSV=$(echo "$MASTER_S3_CONFIG" | base64 --decode)
+          MASTER_S3_CONFIG_ACCESS_KEY_ID=${MASTER_S3_CONFIG_ACCESS_KEY_ID=$(echo $MASTER_S3_CONFIG_CSV | cut -d "," -f 1)}
+          MASTER_S3_CONFIG_SECRET_ACCESS_KEY=${MASTER_S3_CONFIG_SECRET_ACCESS_KEY=$(echo $MASTER_S3_CONFIG_CSV | cut -d "," -f 2)}
+          MASTER_S3_CONFIG_REGION=${MASTER_S3_CONFIG_REGION=$(echo $MASTER_S3_CONFIG_CSV | cut -d "," -f 3)}
+          MASTER_S3_CONFIG_BUCKET=${MASTER_S3_CONFIG_BUCKET=$(echo $MASTER_S3_CONFIG_CSV | cut -d "," -f 4)}
+          MASTER_S3_CONFIG_ENV_SH=${MASTER_S3_CONFIG_ENV_SH=$(echo $MASTER_S3_CONFIG_CSV | cut -d "," -f 5)}
+    - arjen/s3get:
+        access_key: $MASTER_S3_CONFIG_ACCESS_KEY_ID
+        secret_key: $MASTER_S3_CONFIG_SECRET_ACCESS_KEY
+        bucket: $MASTER_S3_CONFIG_BUCKET
+        key: $MASTER_S3_CONFIG_ENV_SH
+        region: $MASTER_S3_CONFIG_REGION
+        filename: config/container_env/env-provisioner.sh
+    - script:
+        name: read environment variables from default build files
+        code: source ./config/container_env/env-provisioner.sh
     - npm-install # comment this out if you have already install npm dependencies
     - npm-test
+    - script:
+        name: print environment variables
+        code: env
     # uncomment the following to enable docker image creation
     # - internal/docker-push:
     #     disable-sync: true
@@ -67,6 +93,9 @@ docker:
   box:
     id: axnux/node-gulp:latest
   steps:
+    - script:
+        name: print environment variables
+        code: env
     # push to docker hub
     - internal/docker-push:
         disable-sync: true
@@ -108,6 +137,9 @@ docker:
 ### release workflow ###
 build-production: #NODE_ENV=production
   steps:
+    - script:
+        name: print environment variables
+        code: env
     - script:
         name: clean npm modules
         code: rm -rf node_modules/*
@@ -204,11 +236,11 @@ k8s-deploy:
       # anything that is declared here will be available as parameters in servie-template.yml file
       # IMAGE_PULL_SECRET=$DEPLOY_IMAGE_PULL_SECRET # uncomment it if you are using private docker registry
       parameters:
+        GIT_COMMIT_HASH=$WERCKER_GIT_COMMIT
         AWS_ECR_ID=$AWS_ECR_REGISTRY_ID
         AWS_ECR_REGION=$AWS_ECR_REGION
         DEPLOY_IMAGE_TAG=$DEPLOY_IMAGE_TAG
         IMAGE_PULL_SECRET=$DEPLOY_IMAGE_PULL_SECRET
-        TEMPLATE_SERVICE_TARGET_PORT=$TEMPLATE_PORT
         DEPLOY_SERVICE_PORT=$DEPLOY_SERVICE_PORT
         TEMPLATE_SERVICE_UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
     - script:
@@ -220,7 +252,7 @@ k8s-deploy:
     # - script:
     #   name: generate docker config secret
     #   code: |
-    #     AWS_AUTH_TOKEN=`AWS_ACCESS_KEY_ID=$AWS_ECR_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_ECR_SECRET_ACCESS_KEY AWS_DEFAULT_REGION=$AWS_ECR_REGION aws ecr --region=eu-west-1 get-authorization-token --output text --query authorizationData[].authorizationToken | base64 -d | cut -d: -f2`
+    #     AWS_AUTH_TOKEN=`AWS_ACCESS_KEY_ID=$AWS_ECR_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_ECR_SECRET_ACCESS_KEY AWS_DEFAULT_REGION=$AWS_ECR_REGION aws ecr --region=$AWS_ECR_REGION get-authorization-token --output text --query authorizationData[].authorizationToken | base64 -d | cut -d: -f2`
     #     export AWS_ECR_AUTH_TOKEN=$AWS_AUTH_TOKEN
     # - script:
     #   name: generate secret for kubernetes
@@ -248,6 +280,12 @@ k8s-deploy:
           --client-key="deploy/admin-key.pem" \
           apply -f deploy/zap.yml
 
+deploy:
+  production:
+    steps:
+      - script:
+        name: print deployment file
+        code: cat deploy/zap.yml
 
 ## advanced
 ## to inject environment variable into the container. prefix the environment variable name with X_ in the *.env file below

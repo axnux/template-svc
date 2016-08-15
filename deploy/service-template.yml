@@ -23,6 +23,7 @@ spec:
       labels:
         name: template-svc-name
         version: v0
+        git-hash: {{GIT_COMMIT_HASH}}
     spec:
       # uncomment the image pull secrets if you are using private docker registry
       # imagePullSecrets:

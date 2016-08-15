@@ -1,3 +1,4 @@
 *
 !*.env.sample
+!master.s3.config.sample
 !.gitignore
