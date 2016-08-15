@@ -47,10 +47,10 @@ build: #NODE_ENV=development
         bucket: $MASTER_S3_CONFIG_BUCKET
         key: $MASTER_S3_CONFIG_ENV_SH
         region: $MASTER_S3_CONFIG_REGION
-        filename: config/container_env/env-provisioner.sh
+        filename: $WERCKER_CACHE_DIR/env-provisioner.sh
     - script:
-        name: read environment variables from default build files
-        code: source ./config/container_env/env-provisioner.sh
+        name: read environment variables from default env vars files
+        code: source $WERCKER_CACHE_DIR/env-provisioner.sh
     - npm-install # comment this out if you have already install npm dependencies
     - npm-test
     - script:
@@ -80,6 +80,9 @@ update-doc:
     id: axnux/swagger2aglio:latest
   steps:
     - script:
+        name: read environment variables from default env vars files
+        code: source $WERCKER_CACHE_DIR/env-provisioner.sh
+    - script:
         name: generate api doc
         code: swagger2aglio --theme-variables slate --input ./docs/api.yml --output ./docs/api_doc/api.html
     - s3sync: # synchronize api docs and test coverage report to s3
@@ -94,8 +97,8 @@ docker:
     id: axnux/node-gulp:latest
   steps:
     - script:
-        name: print environment variables
-        code: env
+        name: read environment variables from default env vars files
+        code: source $WERCKER_CACHE_DIR/env-provisioner.sh
     # push to docker hub
     - internal/docker-push:
         disable-sync: true
@@ -138,8 +141,8 @@ docker:
 build-production: #NODE_ENV=production
   steps:
     - script:
-        name: print environment variables
-        code: env
+        name: read environment variables from default env vars files
+        code: source $WERCKER_CACHE_DIR/env-provisioner.sh
     - script:
         name: clean npm modules
         code: rm -rf node_modules/*
@@ -169,6 +172,9 @@ docker-production:
   box:
     id: node:6-slim
   steps:
+    - script:
+        name: read environment variables from default env vars files
+        code: source $WERCKER_CACHE_DIR/env-provisioner.sh
     # push to docker hub
     - internal/docker-push:
         disable-sync: true
@@ -221,6 +227,9 @@ k8s-deploy:
   box:
     id: axnux/alpine-aws-ecr:latest
   steps:
+    - script:
+        name: read environment variables from default env vars files
+        code: source $WERCKER_CACHE_DIR/env-provisioner.sh
     - script:
       name: download files for kubernetes
       code: |
@@ -279,13 +288,6 @@ k8s-deploy:
           --client-certificate="deploy/admin.pem" \
           --client-key="deploy/admin-key.pem" \
           apply -f deploy/zap.yml
-
-deploy:
-  production:
-    steps:
-      - script:
-        name: print deployment file
-        code: cat deploy/zap.yml
 
 ## advanced
 ## to inject environment variable into the container. prefix the environment variable name with X_ in the *.env file below
