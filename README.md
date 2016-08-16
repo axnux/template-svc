@@ -27,6 +27,7 @@ Support for **Docker** through **Wercker**
 - wercker cli  
 
 ### Instructions  
+#### Development  
 For some reason you might don't want to use nodejs in your local machine.   
 Then you can still start development using **wercker cli**  
 1. To start with development using **wercker**  
@@ -52,8 +53,9 @@ dev:
         code: npm run bdd
 ```  
 
-3. To push the development container to docker.  
-    Modify the`wercker.yml` as below  
+#### Build
+To push the development container to docker.  
+Modify the`wercker.yml` as below  
 
 ```yml
 build:
@@ -64,10 +66,10 @@ build:
          disable-sync: true
          username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
          password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
-         repository: $DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: axnux/media-svc
-         working-dir: /pipeline/source
+         repository: $DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: axnux/template-svc
+         working-dir: $WERCKER_SOURCE_DIR
          cmd: start
-         entrypoint: /usr/local/bin/npm
+         entrypoint: gulp dev --debug
          tag: debug-build
 ```
 

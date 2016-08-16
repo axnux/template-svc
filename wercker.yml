@@ -3,8 +3,6 @@ box:
   ports: # decide which port to expose to host
     - "3000"
 
-### development workflow ###
-# run the following code in terminal
 # wercker dev --expose-ports=true
 dev: #NODE_ENV=development
   box:
@@ -14,8 +12,9 @@ dev: #NODE_ENV=development
       - "1337"  # chrome UI for debugging
       - "5858"  # port for node-inspector debugging socket
   steps:
-    - npm-install # comment this out if you have already install npm dependencies
+    - npm-install
     # you have two options for local development
+    # # 1. Run in local development debugging mode. auto re-run on files changes
     - script:
         name: start dev environment
         code: npm run dev:debug
@@ -27,8 +26,15 @@ dev: #NODE_ENV=development
 
 # wercker build
 build: #NODE_ENV=development
+  box:
+    id: node:6
+    ports:
+      - "3000"
+      - "1337"
+      - "5858"
   steps:
-    # export environment variables from s3 repo
+    # load $MASTER_S3_CONFIG from wercker dashboard
+    # will fallback to default values provided in config/container_env/master.s3.config if it exists
     - script:
         name: read s3 config for wercker
         code: |
@@ -41,6 +47,7 @@ build: #NODE_ENV=development
           MASTER_S3_CONFIG_REGION=${MASTER_S3_CONFIG_REGION=$(echo $MASTER_S3_CONFIG_CSV | cut -d "," -f 3)}
           MASTER_S3_CONFIG_BUCKET=${MASTER_S3_CONFIG_BUCKET=$(echo $MASTER_S3_CONFIG_CSV | cut -d "," -f 4)}
           MASTER_S3_CONFIG_ENV_SH=${MASTER_S3_CONFIG_ENV_SH=$(echo $MASTER_S3_CONFIG_CSV | cut -d "," -f 5)}
+    # download the env-provisioner.sh from s3 using the configuration from the above $MASTER_S3_CONFIG
     - arjen/s3get:
         access_key: $MASTER_S3_CONFIG_ACCESS_KEY_ID
         secret_key: $MASTER_S3_CONFIG_SECRET_ACCESS_KEY
@@ -48,37 +55,29 @@ build: #NODE_ENV=development
         key: $MASTER_S3_CONFIG_ENV_SH
         region: $MASTER_S3_CONFIG_REGION
         filename: $WERCKER_CACHE_DIR/env-provisioner.sh
+    # expose the environment variables provided in env-provisioner.sh
     - script:
         name: read environment variables from default env vars files
         code: source $WERCKER_CACHE_DIR/env-provisioner.sh
-    - npm-install # comment this out if you have already install npm dependencies
+    - npm-install
     - npm-test
-    - script:
-        name: print environment variables
-        code: env
     # uncomment the following to enable docker image creation
     # - internal/docker-push:
     #     disable-sync: true
     #     username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
     #     password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
     #     repository: $DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: axnux/sample-svc
-    #     working-dir: /pipeline/source
-    #     cmd: start
-    #     entrypoint: /usr/local/bin/npm
+    #     working-dir: $WERCKER_SOURCE_DIR
+    #     entrypoint: gulp dev --debug
     #     tag: debug-build
 
-    # optional slack notifier
-    # after-steps: # send notification to slack
-    #   - slack-notifier:
-    #       url: $SLACK_WEB_HOOK
-    #       channel: updates
-    #       username: Wercker Bot
 
-# optional step.
+# optional step to generate api docs and test coverage report
 update-doc:
   box:
     id: axnux/swagger2aglio:latest
   steps:
+    # expose the environment variables provided in env-provisioner.sh
     - script:
         name: read environment variables from default env vars files
         code: source $WERCKER_CACHE_DIR/env-provisioner.sh
@@ -96,6 +95,7 @@ docker:
   box:
     id: axnux/node-gulp:latest
   steps:
+    # expose the environment variables provided in env-provisioner.sh
     - script:
         name: read environment variables from default env vars files
         code: source $WERCKER_CACHE_DIR/env-provisioner.sh
@@ -140,6 +140,7 @@ docker:
 ### release workflow ###
 build-production: #NODE_ENV=production
   steps:
+    # expose the environment variables provided in env-provisioner.sh
     - script:
         name: read environment variables from default env vars files
         code: source $WERCKER_CACHE_DIR/env-provisioner.sh
@@ -172,6 +173,7 @@ docker-production:
   box:
     id: node:6-slim
   steps:
+    # expose the environment variables provided in env-provisioner.sh
     - script:
         name: read environment variables from default env vars files
         code: source $WERCKER_CACHE_DIR/env-provisioner.sh
@@ -225,8 +227,9 @@ docker-production:
 # you already have all the necessary pem files in place
 k8s-deploy:
   box:
-    id: axnux/alpine-aws-ecr:latest
+    id: axnux/alpine-aws-ecr:latest # has built in aws cli & kubectl
   steps:
+    # expose the environment variables provided in env-provisioner.sh
     - script:
         name: read environment variables from default env vars files
         code: source $WERCKER_CACHE_DIR/env-provisioner.sh
@@ -243,7 +246,6 @@ k8s-deploy:
       template: deploy/service-template.yml
       output: deploy/zap.yml
       # anything that is declared here will be available as parameters in servie-template.yml file
-      # IMAGE_PULL_SECRET=$DEPLOY_IMAGE_PULL_SECRET # uncomment it if you are using private docker registry
       parameters:
         GIT_COMMIT_HASH=$WERCKER_GIT_COMMIT
         AWS_ECR_ID=$AWS_ECR_REGISTRY_ID
@@ -280,15 +282,21 @@ k8s-deploy:
     #        --docker-username=AWS \
     #        --docker-password="$AWS_ECR_AUTH_TOKEN" \
     #        --docker-email=""
-    - script:
-      name: deploy to kubernetes
-      code: |
-        kubectl --server="$KUBERNETES_MASTER" \
-          --certificate-authority="deploy/ca.pem" \
-          --client-certificate="deploy/admin.pem" \
-          --client-key="deploy/admin-key.pem" \
-          apply -f deploy/zap.yml
+    - kubectl:
+      server: $KUBERNETES_MASTER
+      certificate-authority: deploy/ca.pem
+      client-certificate: deploy/admin.pem
+      client-key: deploy/admin-key.pem
+      command: apply -f deploy/zap.yml
 
-## advanced
-## to inject environment variable into the container. prefix the environment variable name with X_ in the *.env file below
-##     --environment config/container_env/build_development.env
+## advanced ##
+#
+# to inject environment variable into the container. prefix the environment variable name with X_ in the *.env file below
+#     --environment config/container_env/build_development.env
+#
+# optional slack notifier
+# after-steps: # send notification to slack
+#   - slack-notifier:
+#       url: $SLACK_WEB_HOOK
+#       channel: updates
+#       username: Wercker Bot
