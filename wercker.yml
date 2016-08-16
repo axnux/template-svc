@@ -26,12 +26,24 @@ dev: #NODE_ENV=development
 
 # wercker build
 build: #NODE_ENV=development
-  box:
-    id: node:6
-    ports:
-      - "3000"
-      - "1337"
-      - "5858"
+  steps:
+    - npm-install
+    - npm-test
+    # uncomment the following to enable docker image creation
+    # - internal/docker-push:
+    #     disable-sync: true
+    #     username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
+    #     password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
+    #     repository: $DOCKER_USERNAME/$DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: axnux/sample-svc
+    #     working-dir: $WERCKER_SOURCE_DIR
+    #     entrypoint: gulp dev --debug
+    #     tag: debug-build
+    #     ports:
+    #        - "3000"  # nodejs port
+    #        - "1337"  # chrome UI for debugging
+    #        - "5858"  # port for node-inspector debugging socket
+
+fetch-env-provisioner:
   steps:
     # load $MASTER_S3_CONFIG from wercker dashboard
     # will fallback to default values provided in config/container_env/master.s3.config if it exists
@@ -56,21 +68,9 @@ build: #NODE_ENV=development
         region: $MASTER_S3_CONFIG_REGION
         filename: $WERCKER_CACHE_DIR/env-provisioner.sh
     # expose the environment variables provided in env-provisioner.sh
-    - script:
-        name: read environment variables from default env vars files
-        code: source $WERCKER_CACHE_DIR/env-provisioner.sh
-    - npm-install
-    - npm-test
-    # uncomment the following to enable docker image creation
-    # - internal/docker-push:
-    #     disable-sync: true
-    #     username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
-    #     password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
-    #     repository: $DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: axnux/sample-svc
-    #     working-dir: $WERCKER_SOURCE_DIR
-    #     entrypoint: gulp dev --debug
-    #     tag: debug-build
-
+    # - script:
+    #     name: read environment variables from default env vars files
+    #     code: source $WERCKER_CACHE_DIR/env-provisioner.sh
 
 # optional step to generate api docs and test coverage report
 update-doc:
@@ -114,7 +114,7 @@ docker:
           UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
         entrypoint: gulp dev --debug
         tag: development
-        repository: axnux/template-svc
+        repository: $DOCKER_USERNAME/$DOCKER_REPO
         author: axnux
 
     # push to AWS ECR
@@ -161,8 +161,7 @@ build-production: #NODE_ENV=production
     - script:
         name: list node_modules
         code: ls ./node_modules
-    # TODO static build nodejs
-    - script:
+    - script: # TODO static build nodejs
         name: copy files
         code: |
           cp $(which node) "$WERCKER_OUTPUT_DIR"
@@ -192,7 +191,7 @@ docker-production:
           UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
         cmd: ./node ./server.js
         tag: production
-        repository: axnux/template-svc
+        repository: $DOCKER_USERNAME/$DOCKER_REPO
         author: axnux
 
     # push to AWS ECR
@@ -234,14 +233,13 @@ k8s-deploy:
         name: read environment variables from default env vars files
         code: source $WERCKER_CACHE_DIR/env-provisioner.sh
     - script:
+        name: set deploy image repository
+        code: DEPLOY_IMAGE_REPO=${DEPLOY_IMAGE_REPO="$DOCKER_USERNAME/$DOCKER_REPO"}
+    - script:
       name: download files for kubernetes
       code: |
         AWS_ACCESS_KEY_ID=$S3_ACCESS_KEY_FOR_KUBERNETES AWS_SECRET_ACCESS_KEY=$S3_SECRET_KEY_FOR_KUBERNETES AWS_DEFAULT_REGION=$S3_REGION_FOR_KUBERNETES \
-          aws s3 cp s3://$S3_BUCKET_FOR_KUBERNETES/admin-key.pem deploy/admin-key.pem
-        AWS_ACCESS_KEY_ID=$S3_ACCESS_KEY_FOR_KUBERNETES AWS_SECRET_ACCESS_KEY=$S3_SECRET_KEY_FOR_KUBERNETES AWS_DEFAULT_REGION=$S3_REGION_FOR_KUBERNETES \
-          aws s3 cp s3://$S3_BUCKET_FOR_KUBERNETES/ca.pem deploy/ca.pem
-        AWS_ACCESS_KEY_ID=$S3_ACCESS_KEY_FOR_KUBERNETES AWS_SECRET_ACCESS_KEY=$S3_SECRET_KEY_FOR_KUBERNETES AWS_DEFAULT_REGION=$S3_REGION_FOR_KUBERNETES \
-          aws s3 cp s3://$S3_BUCKET_FOR_KUBERNETES/admin.pem deploy/admin.pem
+          aws s3 cp s3://$S3_BUCKET_FOR_KUBERNETES deploy --recursive
     - xun91/bash-templater:
       template: deploy/service-template.yml
       output: deploy/zap.yml
@@ -250,8 +248,9 @@ k8s-deploy:
         GIT_COMMIT_HASH=$WERCKER_GIT_COMMIT
         AWS_ECR_ID=$AWS_ECR_REGISTRY_ID
         AWS_ECR_REGION=$AWS_ECR_REGION
+        DEPLOY_IMAGE_REPO=$DEPLOY_IMAGE_REPO
         DEPLOY_IMAGE_TAG=$DEPLOY_IMAGE_TAG
-        IMAGE_PULL_SECRET=$DEPLOY_IMAGE_PULL_SECRET
+        DEPLOY_IMAGE_PULL_SECRET=$DEPLOY_IMAGE_PULL_SECRET
         DEPLOY_SERVICE_PORT=$DEPLOY_SERVICE_PORT
         TEMPLATE_SERVICE_UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
     - script:
