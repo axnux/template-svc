@@ -34,7 +34,7 @@ build: #NODE_ENV=development
     #     disable-sync: true
     #     username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
     #     password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
-    #     repository: $DOCKER_USERNAME/$DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: axnux/sample-svc
+    #     repository: $DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: sample-svc
     #     working-dir: $WERCKER_SOURCE_DIR
     #     entrypoint: gulp dev --debug
     #     tag: debug-build
@@ -114,7 +114,7 @@ docker:
           UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
         entrypoint: gulp dev --debug
         tag: development
-        repository: $DOCKER_USERNAME/$DOCKER_REPO
+        repository: $DOCKER_REPO
         author: axnux
 
     # push to AWS ECR
@@ -191,7 +191,7 @@ docker-production:
           UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
         cmd: ./node ./server.js
         tag: production
-        repository: $DOCKER_USERNAME/$DOCKER_REPO
+        repository: $DOCKER_REPO
         author: axnux
 
     # push to AWS ECR
