@@ -75,9 +75,19 @@ dev:
 2. Make sure setting up **X_DOCKER_USERNAME**, **X_DOCKER_PASSWORD**, **X_DOCKER_REPO** in the local.env file  
 Then execute the following command in terminal
 `wercker --environment config/container_env/local.env build`  
-#### OR  
+*OR*  
 Make sure the **$DOCKER_USERNAME**, **$DOCKER_PASSWORD** and **$DOCKER_REPO** are replaced with actual value.  
 Then execute `wercker build` in terminal  
+
+3. If you wish to load environment variables into `wercker.yml` , you could copy `config/container_env/local.env.sample` and paste/rename it as `config/container_env/local.env`.  *Don't worry this file would not be stored in git*  
+All environment variables (with prefix `X_`) from the file will be made available (access without `X_`) to `wercker.yml`. For example, `X_DOCKER_REPO` will become `DOCKER_REPO` in the `wercker.yml`.  [Learn more](http://devcenter.wercker.com/cli/configuration/environment-variables.html)  
+Then execute the following command:  
+
+```shell
+wercker --environment config/container_env/local.env build
+# OR
+wercker --environment config/container_env/local.env dev
+```
 
 
 ## Logging
@@ -97,12 +107,6 @@ winston.error('something went wrong')
 5. Configuration files for various environments **config/env**  
 6. Configuration file that sit in your local machine only **config/env/local/default.js**  
 7. Environment variable for wercker runtime **config/container_env**  
-
-```shell
-wercker --environment config/container_env/local.env build
-# OR
-wercker --environment config/container_env/local.env dev
-```
 
 
 ## Wercker workflow
@@ -132,7 +136,7 @@ Here is what happens in the pipelines:
 
    ![Imgur](http://i.imgur.com/ACaS1Bv.png)
 
-2. Copy `config/container_env/master.s3.config.sample` as `config/container_env/master.s3.config`  
+2. Copy `config/container_env/master.s3.config.sample` as `config/container_env/master.s3.config`. *Don't worry this file would not be stored in git*  
   Open it and configure it with the your s3 credentials to access the `default-env-vars.sh` that you created in **step 1**.   
 
 3. Execute the following command in your project directory.
@@ -146,8 +150,63 @@ Here is what happens in the pipelines:
 
   ![Imgur](http://i.imgur.com/CHKujY8.png)  
 
-4. There is a few more wercker related environment variable that you have to configure. **TODO**
- 
+4. There is a few more wercker related environment variable that you have to configure from the **Wercker Dashboard**.   
+Below is a list of available environment variables that are required by the pipelines such as build, test, deploy, etc.  
+Note: For the application level env vars see [this](#application-env-vars).
+
+| Environment Variables | Description |
+| --------------------- | ----------- |
+| DEPLOY_IMAGE_REPO   | **Require**. Provide docker image repo. eg: `axnux/template-svc`. unless you have already provided *DOCKER_USERNAME* and *DOCKER_REPO* |
+| DEPLOY_SERVICE_PORT   | Optional. port number to access this service. default to `2200` |
+| DEPLOY_IMAGE_TAG   | optional. docker image tag. default to `development` |
+| DEPLOY_IMAGE_PULL_SECRET   | optional. if you are using image pull secrets please refer to [k8s image pull secrets](http://kubernetes.io/docs/user-guide/images/#using-a-private-registry) |
+| DOCKER_USERNAME   | optional. if you are using docker hub. eg: `axnux`. must provide this and *DOCKER_REPO* if you leave *DEPLOY_IMAGE_REPO* empty |
+| DOCKER_PASSWORD   | optional. if you are using docker hub. |
+| DOCKER_REPO   | optional. if you are using docker hub. eg: `template-svc`. must provide this and *DOCKER_USERNAME* if you leave *DEPLOY_IMAGE_REPO* empty |
+
+
+### Config & Config Merging
+To use the configuration  
+```js
+var config = require('config/default')
+console.log(config.appName) // template-svc
+```
+
+The loading sequence of the configuration file:  
+1. Load `config/env/default.js` (will always be overridden by `2`, `3`)  
+2. Load `config/env/{development|test|production}.js` (load only when it exists. default to development. will be overridden by `3`)  
+3. Load `config/env/local/default.js` (load only when it exists. you can create this file from `config/env/local/default.js.sample` and it will not be checked-in to git)  
+
+#### Notes:
+1. It is recommended to place defaults/commons set of configurations in `config/env/default`.  
+2. If you are using a set of private credentials for local development, please put it in `config/env/local/default.js`. And then pass the actual credentials using environment variables for staging, production, testing, etc.  (as suggested by the [12factor app](https://12factor.net/) )
+3. If the above `2` is inappropriate for your setup, you can also put it in environment specific configurations/credentials directly into any of the `config/env/{development|test|production}.js` file.  
+
+
+
+### Application Env Vars
+There are few ways to set environment variables for Kubernetes pods:   
+1. **Option One** Set env vars into Docker image itself. For instance, if your application config requires a environment variables called *S3_REGION* then you can set the *TEMPLATE_AWS_S3_REGION* in wercker dashboard. And refer it at the *env* section in `wercker.yml` as below (same goes to other env vars):  
+   ![Imgur](http://i.imgur.com/v1fUv4H.png)  
+2. **Option Two** Set env vars in kubernetes configmap, then load it into the deployment file `deploy/service-template.yml`. [Learn more](http://kubernetes.io/docs/user-guide/configmap/#use-case-consume-configmap-in-environment-variables)
+
+
+
+### More about `deploy/service-template.yml`
+If you do not wish to expose your service to the public, just remove
+`type: LoadBalancer` from it.   
+
+If you are using aws ecr private registry, please update the `deploy/service-template.yml` and `wercker.yml` accordingly.  
+
+If you are using private repositories please uncomment  
+
+```yml
+...
+
+imagePullSecrets:
+  - name: {{DEPLOY_IMAGE_PULL_SECRET}}
+```  
+
 
 ## Contribution
 Some of the wercker steps were created and used to meet the very specific needs for my projects. Thus feel free to submit **PULL REQUEST** for better solution/bug fixes :)

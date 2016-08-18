@@ -29,7 +29,7 @@ build: #NODE_ENV=development
   steps:
     - npm-install
     - npm-test
-    # uncomment the following to enable docker image creation
+    # uncomment the following to enable docker image creation to docker hub
     # - internal/docker-push:
     #     disable-sync: true
     #     username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
@@ -67,10 +67,6 @@ fetch-env-provisioner:
         key: $MASTER_S3_CONFIG_ENV_SH
         region: $MASTER_S3_CONFIG_REGION
         filename: $WERCKER_CACHE_DIR/env-provisioner.sh
-    # expose the environment variables provided in env-provisioner.sh
-    # - script:
-    #     name: read environment variables from default env vars files
-    #     code: source $WERCKER_CACHE_DIR/env-provisioner.sh
 
 # optional step to generate api docs and test coverage report
 update-doc:
@@ -288,11 +284,6 @@ k8s-deploy:
       client-key: deploy/admin-key.pem
       command: apply -f deploy/zap.yml
 
-## advanced ##
-#
-# to inject environment variable into the container. prefix the environment variable name with X_ in the *.env file below
-#     --environment config/container_env/build_development.env
-#
 # optional slack notifier
 # after-steps: # send notification to slack
 #   - slack-notifier:
