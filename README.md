@@ -28,7 +28,8 @@ Support for **Docker** through **Wercker**
 
 ### Wercker dev
 For some reason you might don't want to use nodejs in your local machine.   
-Then you can still start development using **wercker cli**  
+Then you can still start development using **wercker cli**:
+
 1. To start with development using **wercker**  
     execute `wercker dev --expose-ports=true`   
      (same as using the recommended *DEBUG* mode above)    
@@ -173,6 +174,7 @@ console.log(config.appName) // template-svc
 ```
 
 The loading sequence of the configuration file:  
+
 1. Load `config/env/default.js` (will always be overridden by `2`, `3`)  
 2. Load `config/env/{development|test|production}.js` (load only when it exists. default to development. will be overridden by `3`)  
 3. Load `config/env/local/default.js` (load only when it exists. you can create this file from `config/env/local/default.js.sample` and it will not be checked-in to git)  
@@ -186,9 +188,14 @@ The loading sequence of the configuration file:
 
 ### Application Env Vars
 There are few ways to set environment variables for Kubernetes pods:   
-1. **Option One** Set env vars into Docker image itself. For instance, if your application config requires a environment variables called *S3_REGION* then you can set the *TEMPLATE_AWS_S3_REGION* in wercker dashboard. And refer it at the *env* section in `wercker.yml` as below (same goes to other env vars):  
+
+1. **Option One** Set env vars into Docker image itself.  
+ For instance, if your application config requires a environment variables called *S3_REGION*  
+ then you can set the *TEMPLATE_AWS_S3_REGION* in wercker dashboard.  
+ And refer it at the *env* section in `wercker.yml` as below (same goes to other env vars):  
    ![Imgur](http://i.imgur.com/v1fUv4H.png)  
-2. **Option Two** Set env vars in kubernetes configmap, then load it into the deployment file `deploy/service-template.yml`. [Learn more](http://kubernetes.io/docs/user-guide/configmap/#use-case-consume-configmap-in-environment-variables)
+2. **Option Two** Set env vars in kubernetes configmap,  
+ then load it into the deployment file `deploy/service-template.yml`. [Learn more](http://kubernetes.io/docs/user-guide/configmap/#use-case-consume-configmap-in-environment-variables)
 
 
 

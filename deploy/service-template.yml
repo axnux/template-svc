@@ -22,7 +22,7 @@ spec:
     metadata:
       labels:
         name: {{DEPLOY_SERVICE_NAME}}
-        git-hash: {{GIT_COMMIT_HASH}}
+        # git-hash: {{GIT_COMMIT_HASH}}
     spec:
       # uncomment the image pull secrets if you are using private docker registry
       # imagePullSecrets:
