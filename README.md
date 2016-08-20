@@ -63,7 +63,6 @@ dev:
 
       # make sure the code below is not commented  
        - internal/docker-push:
-           disable-sync: true
            username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
            password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
            repository: $DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: axnux/template-svc
