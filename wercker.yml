@@ -31,7 +31,6 @@ build: #NODE_ENV=development
     - npm-test
     # uncomment the following to enable docker image creation to docker hub
     # - internal/docker-push:
-    #     disable-sync: true
     #     username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
     #     password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
     #     repository: $DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: sample-svc
@@ -97,7 +96,6 @@ docker:
         code: source $WERCKER_CACHE_DIR/env-provisioner.sh
     # push to docker hub
     - internal/docker-push:
-        disable-sync: true
         username: $DOCKER_USERNAME  # define DOCKER_USERNAME in your wercker dashboard
         password: $DOCKER_PASSWORD  # define DOCKER_PASSWORD in your wercker dashboard
         working-dir: $WERCKER_SOURCE_DIR
@@ -115,7 +113,6 @@ docker:
 
     # push to AWS ECR
     # - internal/docker-push:
-    #     disable-sync: true
     #     aws-access-key: $AWS_ECR_ACCESS_KEY_ID
     #     aws-secret-key: $AWS_ECR_SECRET_ACCESS_KEY
     #     aws-region: $AWS_ECR_REGION
@@ -174,7 +171,6 @@ docker-production:
         code: source $WERCKER_CACHE_DIR/env-provisioner.sh
     # push to docker hub
     - internal/docker-push:
-        disable-sync: true
         username: $DOCKER_USERNAME  # define DOCKER_USERNAME in your wercker dashboard
         password: $DOCKER_PASSWORD  # define DOCKER_PASSWORD in your wercker dashboard
         working-dir: $WERCKER_SOURCE_DIR
@@ -192,7 +188,6 @@ docker-production:
 
     # push to AWS ECR
     # - internal/docker-push:
-    #     disable-sync: true
     #     aws-access-key: $AWS_ECR_ACCESS_KEY_ID
     #     aws-secret-key: $AWS_ECR_SECRET_ACCESS_KEY
     #     aws-region: $AWS_ECR_REGION
@@ -260,23 +255,18 @@ k8s-deploy:
     #   code: |
     #     AWS_AUTH_TOKEN=`AWS_ACCESS_KEY_ID=$AWS_ECR_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_ECR_SECRET_ACCESS_KEY AWS_DEFAULT_REGION=$AWS_ECR_REGION aws ecr --region=$AWS_ECR_REGION get-authorization-token --output text --query authorizationData[].authorizationToken | base64 -d | cut -d: -f2`
     #     export AWS_ECR_AUTH_TOKEN=$AWS_AUTH_TOKEN
-    # - script:
-    #   name: generate secret for kubernetes
-    #   command: |
-    #     kubectl --server="$KUBERNETES_MASTER" \
-    #       --certificate-authority="deploy/ca.pem" \
-    #       --client-certificate="deploy/admin.pem" \
-    #       --client-key="deploy/admin-key.pem" \
-    #       delete secret --ignore-not-found $DEPLOY_IMAGE_PULL_SECRET
-    #     kubectl --server="$KUBERNETES_MASTER" \
-    #       --certificate-authority="deploy/ca.pem" \
-    #       --client-certificate="deploy/admin.pem" \
-    #       --client-key="deploy/admin-key.pem" \
-    #       create secret docker-registry $DEPLOY_IMAGE_PULL_SECRET \
-    #        --docker-server=https://$AWS_ECR_REGISTRY_ID.dkr.ecr.$AWS_ECR_REGION.amazonaws.com \
-    #        --docker-username=AWS \
-    #        --docker-password="$AWS_ECR_AUTH_TOKEN" \
-    #        --docker-email=""
+    # - kubectl:
+    #   server: $KUBERNETES_MASTER
+    #   certificate-authority: deploy/ca.pem
+    #   client-certificate: deploy/admin.pem
+    #   client-key: deploy/admin-key.pem
+    #   command: delete secret --ignore-not-found $DEPLOY_IMAGE_PULL_SECRET
+    # - kubectl:
+    #   server: $KUBERNETES_MASTER
+    #   certificate-authority: deploy/ca.pem
+    #   client-certificate: deploy/admin.pem
+    #   client-key: deploy/admin-key.pem
+    #   command: create secret docker-registry "$DEPLOY_IMAGE_PULL_SECRET" --docker-server="https://$AWS_ECR_REGISTRY_ID.dkr.ecr.$AWS_ECR_REGION.amazonaws.com" --docker-username="AWS" --docker-password="$AWS_ECR_AUTH_TOKEN" --docker-email="dummy-ecr@aws.com"
     - kubectl:
       server: $KUBERNETES_MASTER
       certificate-authority: deploy/ca.pem
