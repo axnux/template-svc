@@ -157,13 +157,13 @@ Note: For the application level env vars see [this](#application-env-vars).
 
 | Environment Variables | Description |
 | --------------------- | ----------- |
-| DEPLOY_IMAGE_REPO   | **Require**. Provide docker image repo. eg: `axnux/template-svc`. unless you have already provided *DOCKER_USERNAME* and *DOCKER_REPO* |
+| DEPLOY_IMAGE_REPO   | **Require**. Provide docker image repo. eg: `axnux/template-svc`. unless you have already provided both *DOCKER_USERNAME* and *DOCKER_REPO* |
 | DEPLOY_SERVICE_PORT   | Optional. port number to access this service. default to `2200` |
 | DEPLOY_IMAGE_TAG   | optional. docker image tag. default to `development` |
 | DEPLOY_IMAGE_PULL_SECRET   | optional. if you are using image pull secrets please refer to [k8s image pull secrets](http://kubernetes.io/docs/user-guide/images/#using-a-private-registry) |
 | DOCKER_USERNAME   | optional. if you are using docker hub. eg: `axnux`. must provide this and *DOCKER_REPO* if you leave *DEPLOY_IMAGE_REPO* empty |
 | DOCKER_PASSWORD   | optional. if you are using docker hub. |
-| DOCKER_REPO   | optional. if you are using docker hub. eg: `template-svc`. must provide this and *DOCKER_USERNAME* if you leave *DEPLOY_IMAGE_REPO* empty |
+| DOCKER_REPO   | **Require**. eg: `template-svc` |
 
 
 ### Config & Config Merging

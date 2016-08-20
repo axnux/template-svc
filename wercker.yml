@@ -128,9 +128,9 @@ docker:
     #       S3_REGION=$TEMPLATE_AWS_S3_REGION
     #       S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
     #       UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
-    #     entrypoint: /usr/local/bin/node server.js
+    #     entrypoint: gulp dev --debug
     #     tag: development
-    #     repository: template-svc
+    #     repository: $DOCKER_REPO
     #     author: axnux
 
 ### release workflow ###
@@ -207,7 +207,7 @@ docker-production:
     #       UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
     #     cmd: ./node ./server.js
     #     tag: production
-    #     repository: template-svc
+    #     repository: $DOCKER_REPO
     #     author: axnux
 
   # after-steps: # send notification to slack
