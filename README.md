@@ -62,14 +62,21 @@ dev:
     steps:
 
       # make sure the code below is not commented  
-       - internal/docker-push:
-           username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
-           password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
-           repository: $DOCKER_REPO # replace DOCKER_REPO with your docker hub registries name. eg: axnux/template-svc
-           working-dir: $WERCKER_SOURCE_DIR
-           cmd: start
-           entrypoint: gulp dev --debug
-           tag: debug-build
+      - script:
+          name: set deploy image repository
+          code: export DEPLOY_IMAGE_REPO=${DEPLOY_IMAGE_REPO="$DOCKER_USERNAME/$DOCKER_REPO"}
+      - internal/docker-push:
+          username: $DOCKER_USERNAME  # replace DOCKER_USERNAME with your docker hub user name
+          password: $DOCKER_PASSWORD  # replace DOCKER_PASSWORD with your docker hub password
+          repository: $DEPLOY_IMAGE_REPO # replace DOCKER_REPO with your docker hub registries name. eg: sample-svc
+          working-dir: $WERCKER_SOURCE_DIR
+          entrypoint: gulp dev --debug
+          tag: debug-build
+          ports:
+             - "3000"  # nodejs port
+             - "1337"  # chrome UI for debugging
+             - "5858"  # port for node-inspector debugging socket
+
   ```
 
 2. Make sure setting up **X_DOCKER_USERNAME**, **X_DOCKER_PASSWORD**, **X_DOCKER_REPO** in the local.env file  
@@ -112,7 +119,7 @@ winston.error('something went wrong')
 ## Wercker workflow
 We have created a continuous delivery workflow as below:  
 
-![Imgur](http://i.imgur.com/TA8IX4w.png)
+![Imgur](http://i.imgur.com/0qfoMaB.png)
 
 Here is what happens in the pipelines:  
 
@@ -120,15 +127,18 @@ Here is what happens in the pipelines:
     - npm install  
     - unit test  
 
-2. fetch env vars provisioner script
-    - load the **MASTER_S3_CONFIG** from env vars (wercker dashboard)  
-    - fetch `default-env-vars.sh` from s3  
-    - cache it as `env-provisioner.sh`  
-
-3. then the following pipelines will run concurrently and each of these will start with loading environment variables using `env-provisioner.sh`  
+2. the following pipelines will run concurrently and each of these will start with loading environment variables using `env-provisioner.sh` (see below)  
     - build docker image for development use -> deploy to kubernetes
     - rebuild for npm for production use -> build docker image for production use -> deploy to kubernetes
     - update test coverage report and api docs to s3
+
+
+*Fetch env vars provisioner script*  
+
+  - load the **MASTER_S3_CONFIG** from env vars (wercker dashboard)  
+  - fetch `default-env-vars.sh` from s3  
+  - cache it as `env-provisioner.sh`  
+
 
 ### Workflow setup
 1. Configure `config/container_env/env-provisioner.sh.sample`, and store it as `default-env-vars.sh` in your s3 bucket (root level).  
