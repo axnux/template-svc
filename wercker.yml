@@ -101,11 +101,6 @@ docker:
         working-dir: $WERCKER_SOURCE_DIR
         env: |
           NODE_ENV=development
-          S3_ACCESS_KEY_ID=$TEMPLATE_AWS_S3_KEY_ID
-          S3_SECRET_ACCESS_KEY=$TEMPLATE_AWS_S3_SECRET_ACCESS_KEY
-          S3_REGION=$TEMPLATE_AWS_S3_REGION
-          S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
-          UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
         entrypoint: gulp dev --debug
         tag: development
         repository: $DEPLOY_IMAGE_REPO
@@ -120,11 +115,6 @@ docker:
     #     working-dir: $WERCKER_SOURCE_DIR
     #     env: |
     #       NODE_ENV=development
-    #       S3_ACCESS_KEY_ID=$TEMPLATE_AWS_S3_KEY_ID
-    #       S3_SECRET_ACCESS_KEY=$TEMPLATE_AWS_S3_SECRET_ACCESS_KEY
-    #       S3_REGION=$TEMPLATE_AWS_S3_REGION
-    #       S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
-    #       UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
     #     entrypoint: gulp dev --debug
     #     tag: development
     #     repository: $DOCKER_REPO
@@ -162,7 +152,7 @@ build-production: #NODE_ENV=production
         code: |
           cp $(which node) "$WERCKER_OUTPUT_DIR"
           rm -rf ./node_modules/.bin
-          cp -RL ./node_modules ./src ./deploy ./config ./tmp ./server.js ./package.json "$WERCKER_OUTPUT_DIR"
+          cp -RL ./node_modules ./src ./deploy ./config ./server.js ./package.json "$WERCKER_OUTPUT_DIR"
 
 docker-production:
   box:
@@ -188,11 +178,6 @@ docker-production:
         working-dir: $WERCKER_SOURCE_DIR
         env: |
           NODE_ENV=production
-          S3_ACCESS_KEY_ID=$TEMPLATE_AWS_S3_KEY_ID
-          S3_SECRET_ACCESS_KEY=$TEMPLATE_AWS_S3_SECRET_ACCESS_KEY
-          S3_REGION=$TEMPLATE_AWS_S3_REGION
-          S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
-          UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
         cmd: ./node ./server.js
         tag: production
         repository: $DEPLOY_IMAGE_REPO
@@ -207,11 +192,6 @@ docker-production:
     #     working-dir: $WERCKER_SOURCE_DIR
     #     env: |
     #       NODE_ENV=production
-    #       S3_ACCESS_KEY_ID=$TEMPLATE_AWS_S3_KEY_ID
-    #       S3_SECRET_ACCESS_KEY=$TEMPLATE_AWS_S3_SECRET_ACCESS_KEY
-    #       S3_REGION=$TEMPLATE_AWS_S3_REGION
-    #       S3_BUCKET=$TEMPLATE_AWS_S3_BUCKET
-    #       UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
     #     cmd: ./node ./server.js
     #     tag: production
     #     repository: $DEPLOY_IMAGE_REPO
@@ -258,7 +238,7 @@ k8s-deploy:
         DEPLOY_IMAGE_TAG=$DEPLOY_IMAGE_TAG
         DEPLOY_IMAGE_PULL_SECRET=$DEPLOY_IMAGE_PULL_SECRET
         DEPLOY_SERVICE_PORT=$DEPLOY_SERVICE_PORT
-        TEMPLATE_SERVICE_UPLOAD_DIR=$TEMPLATE_UPLOAD_DIR
+        TEMPLATE_SERVICE_UPLOAD_DIR=$UPLOAD_DIR
     - script:
       name: print deployment file
       code: cat deploy/zap.yml

@@ -144,7 +144,7 @@ Here is what happens in the pipelines:
 1. Configure `config/container_env/env-provisioner.sh.sample`, and store it as `default-env-vars.sh` in your s3 bucket (root level).  
    You can then expose the common environment variables to wercker steps as below.  
 
-   ![Imgur](http://i.imgur.com/ACaS1Bv.png)
+   ![Imgur](http://i.imgur.com/KgioS8S.png)
 
 2. Copy `config/container_env/master.s3.config.sample` as `config/container_env/master.s3.config`. *Don't worry this file would not be stored in git*  
   Open it and configure it with the your s3 credentials to access the `default-env-vars.sh` that you created in **step 1**.   
@@ -158,7 +158,7 @@ Here is what happens in the pipelines:
   Then go to wercker dashboard look for the section 'Environment'.  
   Create a new environment variable called **MASTER_S3_CONFIG** and paste the value that you copied earlier into the 'value' column.  
 
-  ![Imgur](http://i.imgur.com/CHKujY8.png)  
+  ![Imgur](http://i.imgur.com/9JZwuCI.png)  
 
 4. There is a few more wercker related environment variable that you have to configure from the **Wercker Dashboard**.   
 Below is a list of available environment variables that are required by the pipelines such as build, test, deploy, etc.  
@@ -196,13 +196,21 @@ The loading sequence of the configuration file:
 ### Application Env Vars
 There are few ways to set environment variables for Kubernetes pods:   
 
-1. **Option One** Set env vars into Docker image itself.  
+1. **Option One** Set env vars in Wercker dashboard.  
  For instance, if your application config requires a environment variables called *S3_REGION*  
- then you can set the *TEMPLATE_AWS_S3_REGION* in wercker dashboard.  
- And refer it at the *env* section in `wercker.yml` as below (same goes to other env vars):  
-   ![Imgur](http://i.imgur.com/v1fUv4H.png)  
+ then you can set the *S3_REGION* in wercker dashboard:  
+
+  ![Imgur](http://i.imgur.com/A5iq1jF.png)  
+
 2. **Option Two** Set env vars in kubernetes configmap,  
  then load it into the deployment file `deploy/service-template.yml`. [Learn more](http://kubernetes.io/docs/user-guide/configmap/#use-case-consume-configmap-in-environment-variables)
+
+3. **Option Three** (not recommended) Set env vars into Docker image itself.  
+For instance, if your application config requires a environment variables called *S3_REGION*  
+then you can set the *TEMPLATE_AWS_S3_REGION* in wercker dashboard.  
+And refer it at the *env* section in `wercker.yml` as below (same goes to other env vars):  
+
+  ![Imgur](http://i.imgur.com/nmwYhbK.png)
 
 
 
