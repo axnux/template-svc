@@ -157,6 +157,7 @@ Here is what happens in the pipelines:
   ```
   Then go to wercker dashboard look for the section 'Environment'.  
   Create a new environment variable called **MASTER_S3_CONFIG** and paste the value that you copied earlier into the 'value' column.  
+  *note: It is a `base64` encoded s3 credentials that will be used in the custom wercker step to fetch the `default-env-vars.sh` from s3. This script will export a list of common environment variables to the wercker processes.  *  
 
   ![Imgur](http://i.imgur.com/9JZwuCI.png)  
 
