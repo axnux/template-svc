@@ -45,7 +45,7 @@ Here is what happens in the pipelines:
 
 4. There is a few more wercker related environment variable that you have to configure from the **Wercker Dashboard**.
 Below is a list of available environment variables that are required by the pipelines such as build, test, deploy, etc.
-Note: For the application level env vars see [this](#application-env-vars).
+Note: For the application level env vars see [this](#application-env-vars-for-deployment).
 
 | Environment Variables | Description |
 | --------------------- | ----------- |

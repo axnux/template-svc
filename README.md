@@ -1,8 +1,8 @@
 # Microservices Starter template [![wercker status](https://app.wercker.com/status/3990bf39fc888c44f5cd6821df712c87/s "wercker status")](https://app.wercker.com/project/bykey/3990bf39fc888c44f5cd6821df712c87) [![Dependency Status](https://gemnasium.com/badges/github.com/axnux/template-svc.svg)](https://gemnasium.com/github.com/axnux/template-svc)  [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/axnux/template-svc/issues)  
 
-An *experimental* nodejs BDD scaffolding for microservices
-
-Optional support for **Docker** through **Wercker**
+An *experimental* nodejs BDD scaffolding for microservices  
+Optional support for **Docker** through **Wercker**  
+*! This project is still under development and it is suitable for production use !*
 
 ## Start development with local nodejs (recommended)
 ### Prerequisites  
@@ -28,6 +28,8 @@ Optional support for **Docker** through **Wercker**
 ## Logging
 
 ```js
+var winston = require('winston').loggers.get('standard')
+
 // { emerg: 0, alert: 1, crit: 2, error: 3, warning: 4, notice: 5, info: 6, debug: 7 }
 winston.warn('something might go wrong')
 winston.error('something went wrong')
@@ -59,7 +61,7 @@ The loading sequence of the configuration file:
 
 #### Notes:
 1. It is recommended to place defaults/commons set of configurations in `config/env/default`.  
-2. If you are using a set of private credentials for local development, please put it in `config/env/local/default.js`. And then pass the actual credentials using environment variables for staging, production, testing, etc.  (as suggested by the [12factor app](https://12factor.net/) )
+2. If you are using a set of private credentials for local development, please put it in `config/env/local/default.js`. And then pass the actual credentials using environment variables for staging, production, testing, etc.  (as suggested by the [12factor app](https://12factor.net/))
 3. If the above `2` is inappropriate for your setup, you can also put it in environment specific configurations/credentials directly into any of the `config/env/{development|test|production}.js` file.  
 
 
