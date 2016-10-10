@@ -2,7 +2,7 @@
 
 An *experimental* nodejs BDD scaffolding for microservices  
 Optional support for **Docker** through **Wercker**  
-*! This project is still under development and it is suitable for production use !*
+*! This project is still under development and it is not suitable for production use !*
 
 ## Start development with local nodejs (recommended)
 ### Prerequisites  
